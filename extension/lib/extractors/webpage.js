@@ -20,31 +20,51 @@ const STRIP_TAGS = new Set([
   'figure', 'figcaption', 'video', 'audio', 'picture',
 ]);
 
+// Extract the page HTML via chrome.scripting.executeScript instead of fetch().
+// This works under `activeTab` + `scripting` permissions and respects the
+// user's session (cookies, paywall bypass for logged-in pages, etc.).
+async function getHtmlFromActiveTab(url) {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs && tabs[0];
+  if (!tab || !tab.id) {
+    const err = new Error('No active tab — open the article in your current tab, then click Summarize.');
+    err.code = 'NO_ACTIVE_TAB';
+    throw err;
+  }
+  // Be flexible about URL match — query strings and fragments may differ.
+  if (url && tab.url) {
+    const norm = (u) => { try { const x = new URL(u); return x.origin + x.pathname; } catch (_) { return u; } };
+    if (norm(tab.url) !== norm(url)) {
+      const err = new Error('To summarize an article, open it in the active tab first, then click the AI Summarizer toolbar icon.');
+      err.code = 'URL_NOT_ACTIVE';
+      err.url = url;
+      err.activeUrl = tab.url;
+      throw err;
+    }
+  }
+  try {
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      world: 'MAIN',
+      func: () => document.documentElement ? document.documentElement.outerHTML : '',
+    });
+    return res && res.result ? res.result : '';
+  } catch (e) {
+    const err = new Error('Could not read page HTML: ' + e.message);
+    err.code = 'SCRIPTING_FAILED';
+    throw err;
+  }
+}
+
 const POSITIVE_HINTS = /article|content|entry|main|post|story|body|text|markdown/i;
 const NEGATIVE_HINTS = /comment|meta|footer|footnote|nav|sidebar|sponsor|ad|share|related|promo|popup|cookie|banner/i;
 
 export async function extract(url, options) {
-  // Match a real browser as closely as possible — many sites serve a stripped
-  // / blocked version to non-browser User-Agents.
-  const r = await fetch(url, {
-    credentials: 'include',
-    headers: {
-      'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Cache-Control':   'no-cache',
-    },
-  }).catch((e) => {
-    const err = new Error('Network fetch failed: ' + e.message);
-    err.code = 'NETWORK_FAILED';
-    throw err;
-  });
-  if (!r.ok) {
-    const err = new Error(`The page returned HTTP ${r.status}. Some sites block extension fetches — try opening the article in a logged-in tab or use a different page.`);
-    err.code = 'PAGE_HTTP_ERROR';
-    err.status = r.status;
-    throw err;
-  }
-  const html = await r.text();
+  // For arbitrary article URLs we don't have host_permissions, so SW can't
+  // fetch them directly. We grab the rendered HTML straight out of the
+  // active tab via chrome.scripting.executeScript — this works under
+  // activeTab + scripting permissions and only after a user click.
+  const html = await getHtmlFromActiveTab(url);
   if (!html || html.length < 300) {
     const err = new Error('Page returned empty / too-short HTML.');
     err.code = 'PAGE_EMPTY';
