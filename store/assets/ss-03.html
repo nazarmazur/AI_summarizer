@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><link rel="stylesheet" href="_shared.css"/></head>
+<body>
+<div class="canvas">
+  <div class="headline">
+    <span class="pill"><span class="logo">S</span> AI Summarizer</span>
+    <h1>Watch the summary appear<br/><span class="accent">word by word</span></h1>
+    <p>Streaming output, just like ChatGPT. Hit Stop when you've read enough.</p>
+  </div>
+
+  <div class="stage">
+    <!-- Floating popup mockup -->
+    <div class="popup" style="width: 460px; height: 540px; padding: 16px; display: flex; flex-direction: column;">
+      <!-- toolbar -->
+      <div class="toolbar">
+        <div class="chips">
+          <span class="chip">🌐 Українська</span>
+          <span class="chip">📏 Середня</span>
+        </div>
+        <div style="display: flex; gap: 4px;">
+          <div class="iconbtn">🕐</div>
+          <div class="iconbtn">👤</div>
+          <div class="iconbtn">⚙️</div>
+        </div>
+      </div>
+
+      <!-- model row -->
+      <div class="model-row">
+        <span class="chip chip-acc">⚡ Gemini 2.0 Flash <span class="badge-new">New</span></span>
+      </div>
+
+      <!-- url -->
+      <div class="url-row">
+        <div class="url-input has-value" style="font-size: 12px;">📺 youtube.com/watch?v=abc123</div>
+        <div class="send-btn">→</div>
+      </div>
+
+      <!-- tiles -->
+      <div class="tiles">
+        <div class="tile" style="background: linear-gradient(135deg,#f5f3ff,#fce7f3); border-color: transparent;">
+          <span>Сводка</span> ✨
+        </div>
+        <div class="tile">
+          <span>Тайм-коди</span> 🕐
+        </div>
+      </div>
+
+      <!-- result panel -->
+      <div style="border-top: 1px solid #ececf2; padding-top: 10px; flex: 1; overflow: hidden;">
+        <div class="result-head">Підсумок</div>
+        <div class="result-meta">The Future of AI Assistants · GEMINI · gemini-2.0-flash</div>
+        <div class="markdown">
+          <p><strong>Демис Хассабіс</strong> — CEO Google DeepMind — обговорює з Лексом траєкторію штучного інтелекту наступного десятиріччя.</p>
+          <ul>
+            <li><strong>AGI до 2030 року</strong> — ймовірний, але не гарантований. Прорив у reasoning models став несподіванкою навіть для команди DeepMind.</li>
+            <li><strong>AlphaFold</strong> вже скоротив 50-річну роботу до годин — і це лише початок. Drug discovery наступний.</li>
+            <li>Хассабіс підкреслює важливість <strong>responsible scaling</strong> — баланс між open-source і closed моделями ще не знайдено<span style="background:#6366f1; color:transparent; display:inline-block; width:8px; margin-left:2px; animation: blink 1s steps(2) infinite;">.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>@keyframes blink { 50% { opacity: 0; } }</style>
+</body></html>

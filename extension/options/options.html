@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <title data-i18n="optionsTitle">AI Summarizer — Settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="page-head">
+      <img src="../icons/icon48.png" alt="" />
+      <div>
+        <h1 data-i18n="optionsTitle">AI Summarizer settings</h1>
+        <p class="muted">m.nazar77@gmail.com</p>
+      </div>
+    </header>
+
+    <!-- ACCOUNT -->
+    <section class="card">
+      <h2 data-i18n="optionsAuth">Account</h2>
+      <div id="accountBox">
+        <p class="muted" id="accountInfo">Loading…</p>
+        <div class="row">
+          <button class="btn btn-primary" id="signInBtn" data-i18n="authSignIn">Sign in</button>
+          <button class="btn btn-ghost"   id="signOutBtn" data-i18n="authSignOut" hidden>Sign out</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BILLING -->
+    <section class="card" id="billingCard">
+      <h2 data-i18n="billingTitle">Subscription</h2>
+      <div class="billing-grid">
+        <div>
+          <div class="billing-row">
+            <span class="muted" data-i18n="currentPlan">Current plan</span>
+            <span class="plan-badge" id="planBadge">—</span>
+          </div>
+          <div class="billing-row" id="renewalRow" hidden>
+            <span class="muted" id="renewalLabel" data-i18n="renewsOn">Renews on</span>
+            <span id="renewalValue">—</span>
+          </div>
+          <div class="billing-row" id="usageRow">
+            <span class="muted" data-i18n="monthUsage">Used this month</span>
+            <span><span id="usageValue">0</span> <span class="muted" data-i18n="of">of</span> <span id="usageQuota">50</span></span>
+          </div>
+        </div>
+        <div class="row" style="align-self:start; justify-self:end;">
+          <button class="btn btn-primary" id="upgradeBtn"  data-i18n="btnUpgrade">Upgrade to Pro</button>
+          <button class="btn btn-ghost"   id="manageBillingBtn" data-i18n="btnManageBilling" hidden>Manage subscription</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOURCE -->
+    <section class="card">
+      <h2 data-i18n="optionsSource">How to call AI</h2>
+      <label class="radio">
+        <input type="radio" name="source" value="api" />
+        <div>
+          <span data-i18n="sourceApi">Via my API key</span>
+          <p class="muted small radio-sub" data-i18n="sourceApiHint">Unlimited use, you pay your provider directly.</p>
+        </div>
+      </label>
+      <label class="radio">
+        <input type="radio" name="source" value="pool" />
+        <div>
+          <span data-i18n="sourcePool">Via our pooled keys</span>
+          <p class="muted small radio-sub" data-i18n="sourcePoolHint">No key needed. 25/month on Free, 50/month on Pro.</p>
+        </div>
+      </label>
+      <label class="radio">
+        <input type="radio" name="source" value="browser" />
+        <div>
+          <span data-i18n="sourceBrowser">Via signed-in browser tab</span>
+          <p class="muted small radio-sub" data-i18n="sourceBrowserHint">Uses your already-open Gemini / ChatGPT / Claude session.</p>
+        </div>
+      </label>
+    </section>
+
+    <!-- API KEYS -->
+    <section class="card">
+      <h2 data-i18n="optionsKeys">API keys</h2>
+      <p class="muted small">Зберігаються тільки локально, у chrome.storage.local. Не передаються на сервер.</p>
+
+      <div class="field">
+        <label data-i18n="geminiKey">Gemini API key</label>
+        <input type="password" id="geminiKey" placeholder="AIza…" autocomplete="off" />
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="hint" data-i18n="getKeyGemini"></a>
+      </div>
+
+      <div class="field">
+        <label data-i18n="openaiKey">OpenAI API key</label>
+        <input type="password" id="openaiKey" placeholder="sk-…" autocomplete="off" />
+        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="hint" data-i18n="getKeyOpenai"></a>
+      </div>
+
+      <div class="field">
+        <label data-i18n="anthropicKey">Anthropic API key</label>
+        <input type="password" id="anthropicKey" placeholder="sk-ant-…" autocomplete="off" />
+        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="hint" data-i18n="getKeyAnthropic"></a>
+      </div>
+    </section>
+
+    <!-- DEFAULTS -->
+    <section class="card">
+      <h2 data-i18n="optionsDefaults">Defaults</h2>
+
+      <div class="grid">
+        <div class="field">
+          <label data-i18n="selectLanguage">Language</label>
+          <select id="defaultLanguage"></select>
+        </div>
+        <div class="field">
+          <label data-i18n="selectLength">Length</label>
+          <select id="defaultLength">
+            <option value="short"  data-i18n="lengthShort"></option>
+            <option value="medium" data-i18n="lengthMedium"></option>
+            <option value="long"   data-i18n="lengthLong"></option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="selectModel">Model</label>
+          <select id="defaultModel">
+            <option value="auto"      data-i18n="modelAuto"></option>
+            <option value="gemini"    >Gemini 2.0 Flash</option>
+            <option value="geminiPro" >Gemini 2.5 Pro</option>
+            <option value="gpt"       >GPT-4o mini</option>
+            <option value="gptPro"    >GPT-4o</option>
+            <option value="claude"    >Claude Haiku 4.5</option>
+            <option value="claudePro" >Claude Sonnet 4.6</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="pdfModeLabel">PDF mode</label>
+          <select id="defaultPdfMode">
+            <option value="gemini" data-i18n="pdfModeGemini">Gemini native</option>
+            <option value="pdfjs"  data-i18n="pdfModePdfjs">pdf.js (local text)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROMPT TEMPLATES -->
+    <section class="card" id="templatesCard">
+      <h2>
+        <span data-i18n="tplTitle">Шаблони промптів</span>
+        <span class="badge-pro" id="tplProBadge" hidden data-i18n="badgePro">PRO</span>
+      </h2>
+      <p class="muted small" data-i18n="tplHint">Built-in шаблони доступні всім. Власні шаблони — Pro.</p>
+
+      <ul class="tpl-list" id="tplList"></ul>
+
+      <button class="btn btn-ghost" id="tplAddBtn" data-i18n="tplAdd">+ Створити шаблон</button>
+
+      <!-- Editor (shown when adding/editing) -->
+      <div class="tpl-editor" id="tplEditor" hidden>
+        <input type="text" id="tplName" data-i18n-attr="placeholder:tplNamePlaceholder" />
+        <textarea id="tplBody" rows="10" data-i18n-attr="placeholder:tplBodyPlaceholder"></textarea>
+        <p class="muted small">
+          <span data-i18n="tplVarsHint">Доступні змінні:</span>
+          <code>{{lang}}</code> <code>{{length}}</code> <code>{{title}}</code>
+          <code>{{channel}}</code> <code>{{kindLabel}}</code> <code>{{content}}</code>
+        </p>
+        <div class="row">
+          <button class="btn btn-primary" id="tplSaveBtn" data-i18n="saveSettings">Зберегти</button>
+          <button class="btn btn-ghost" id="tplCancelBtn" data-i18n="btnNotNow">Скасувати</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BRIDGE HEALTH -->
+    <section class="card">
+      <h2 data-i18n="optionsBridges">Browser-bridge check</h2>
+      <p class="muted small" data-i18n="optionsBridgesHint"></p>
+
+      <div class="bridge-grid">
+        <div class="bridge-row" data-provider="gemini">
+          <span class="bridge-name">Gemini</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="openai">
+          <span class="bridge-name">ChatGPT</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="anthropic">
+          <span class="bridge-name">Claude</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-row">
+      <button class="btn btn-primary" id="saveBtn" data-i18n="saveSettings">Save</button>
+      <span class="muted" id="savedMsg" hidden data-i18n="saved">Saved!</span>
+    </div>
+  </div>
+
+  <script src="../lib/i18n.js"></script>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

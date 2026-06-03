@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <title data-i18n="historyTitle">History — AI Summarizer</title>
+  <link rel="stylesheet" href="history.css" />
+</head>
+<body>
+  <header class="page-head">
+    <div class="page-head-left">
+      <img src="../icons/icon48.png" alt="" />
+      <h1 data-i18n="historyTitle">Історія</h1>
+    </div>
+    <div class="page-head-right">
+      <input type="search" id="searchBox" data-i18n-attr="placeholder:historySearchPlaceholder" />
+      <button id="settingsBtn" class="icon-btn" title="" data-i18n-attr="title:saveSettings">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19.14 12.94a7.07 7.07 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54a7 7 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.66 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0 0 1.88L2.78 14.52a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96a7 7 0 0 0 1.63.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54a7 7 0 0 0 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar: filters + list -->
+    <aside class="sidebar">
+      <div class="filter-bar">
+        <button class="chip is-active" data-filter-kind="" data-i18n="filterAll">Все</button>
+        <button class="chip" data-filter-kind="summary"   data-i18n="filterSummary">Сводки</button>
+        <button class="chip" data-filter-kind="timestamps" data-i18n="filterTimestamps">Тайм-коди</button>
+      </div>
+      <p class="muted small" id="resultCount"></p>
+
+      <ul class="entry-list" id="entryList"></ul>
+
+      <p class="empty-msg" id="emptyMsg" hidden data-i18n="historyEmpty">Поки порожньо. Зробіть перший підсумок!</p>
+      <p class="empty-msg" id="signinMsg" hidden data-i18n="historyNeedsSignin">Увійдіть, щоб переглядати історію.</p>
+      <p class="empty-msg" id="freeUpsell" hidden>
+        <span data-i18n="historyFreeCap">Free план показує тільки останні 10 підсумків.</span><br/>
+        <a href="#" id="freeUpsellLink" data-i18n="btnUpgrade">Перейти на Pro</a>
+      </p>
+
+      <div class="loader" id="loader" hidden><div class="spinner"></div></div>
+    </aside>
+
+    <!-- Detail view -->
+    <main class="detail">
+      <div class="detail-placeholder" id="detailPlaceholder">
+        <svg viewBox="0 0 64 64" width="80" height="80"><rect x="8" y="14" width="48" height="36" rx="6" fill="#ede9fe"/><path d="M22 26h20M22 32h20M22 38h12" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/></svg>
+        <p data-i18n="historyPickOne">Виберіть запис ліворуч</p>
+      </div>
+
+      <article class="detail-content" id="detailContent" hidden>
+        <header class="detail-head">
+          <span class="detail-kind" id="detailKind"></span>
+          <h2 id="detailTitle"></h2>
+          <p class="detail-meta" id="detailMeta"></p>
+          <div class="detail-actions">
+            <button id="openSourceBtn" class="btn btn-ghost btn-sm" data-i18n="historyOpenSource">Відкрити джерело</button>
+            <button id="copyMdBtn"     class="btn btn-ghost btn-sm" data-i18n="btnCopy">Копіювати</button>
+            <button id="dlMdBtn"       class="btn btn-ghost btn-sm" data-i18n="btnDownloadMd">.md</button>
+            <button id="delBtn"        class="btn btn-ghost btn-sm danger" data-i18n="historyDelete">Видалити</button>
+          </div>
+        </header>
+        <div id="detailBody" class="markdown"></div>
+      </article>
+    </main>
+  </div>
+
+  <script src="../lib/i18n.js"></script>
+  <script type="module" src="history.js"></script>
+</body>
+</html>

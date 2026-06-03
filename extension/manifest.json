@@ -1,0 +1,131 @@
+﻿{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "description": "__MSG_extDescription__",
+  "version": "1.0.3",
+  "version_name": "1.0.3 — Free Launch",
+  "default_locale": "uk",
+  "author": "m.nazar77",
+  "minimum_chrome_version": "124",
+
+  "action": {
+    "default_title": "__MSG_extName__",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+
+  "permissions": [
+    "storage",
+    "identity",
+    "scripting",
+    "tabs",
+    "activeTab"
+  ],
+
+  "host_permissions": [
+    "https://*.youtube.com/*",
+    "https://www.youtube-nocookie.com/*",
+    "https://*.vimeo.com/*",
+    "https://*.twitch.tv/*",
+    "https://*.tiktok.com/*",
+    "https://*.instagram.com/*",
+    "https://*.x.com/*",
+    "https://*.twitter.com/*",
+    "https://gemini.google.com/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://*.supabase.co/*",
+    "<all_urls>"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "https://gemini.google.com/*",
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://*.supabase.co/*"
+      ],
+      "js": ["lib/i18n.js", "content/page.js"],
+      "css": ["content/page.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["content/bridges/gemini-bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["content/bridges/chatgpt-bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content/bridges/claude-bridge.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup/popup.html",
+        "popup/popup.css",
+        "popup/popup.js",
+        "onboarding/onboarding.html",
+        "history/history.html",
+        "lib/i18n.js",
+        "lib/config.js",
+        "lib/supabase.js",
+        "lib/ai-api.js",
+        "lib/pdfjs/*",
+        "auth/auth.html",
+        "icons/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com https://api.openai.com https://api.anthropic.com https://*.youtube.com https://www.youtube.com;"
+  },
+
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+S",
+        "mac": "Alt+S"
+      },
+      "description": "__MSG_openSummarizer__"
+    }
+  }
+}

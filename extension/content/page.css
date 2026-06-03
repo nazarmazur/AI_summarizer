@@ -1,0 +1,149 @@
+/* Button next to Subscribe */
+.ais-yt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #fff;
+  border: 0;
+  border-radius: 18px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: transform .08s ease, box-shadow .12s ease, filter .12s ease;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, .25);
+}
+.ais-yt-btn:hover  { filter: brightness(1.08); box-shadow: 0 4px 14px rgba(99, 102, 241, .35); }
+.ais-yt-btn:active { transform: translateY(1px); }
+.ais-yt-btn svg    { width: 16px; height: 16px; }
+.ais-yt-btn[disabled] { opacity: .7; cursor: progress; }
+
+/* Sidebar card */
+#ais-sidebar-card {
+  background: var(--yt-spec-base-background, #fff);
+  border: 1px solid var(--yt-spec-10-percent-layer, #e5e5e9);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  font: 14px/1.45 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+.ais-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #fff;
+}
+.ais-card-title {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.ais-card-title svg { width: 16px; height: 16px; }
+
+.ais-card-actions { display: inline-flex; gap: 6px; }
+.ais-mini {
+  background: rgba(255, 255, 255, .18);
+  border: 0;
+  color: #fff;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ais-mini:hover { background: rgba(255, 255, 255, .3); }
+
+.ais-card-body {
+  height: 560px;
+  transition: height .2s ease;
+  overflow: hidden;
+}
+.ais-card-body iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+#ais-sidebar-card.is-collapsed .ais-card-body {
+  height: 0;
+}
+
+/* Dark theme support */
+html[dark] #ais-sidebar-card,
+html[data-spf-name=watch][dark] #ais-sidebar-card {
+  background: #0f0f0f;
+  border-color: #2a2a2a;
+}
+
+/* ============================================================ Floating UI */
+
+.ais-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(99, 102, 241, .35);
+  z-index: 2147483600;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.ais-fab:hover   { filter: brightness(1.08); box-shadow: 0 10px 24px rgba(99, 102, 241, .45); transform: translateY(-1px); }
+.ais-fab:active  { transform: translateY(0); }
+.ais-fab svg     { width: 22px; height: 22px; }
+
+#ais-floating-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 85px;
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  max-height: 70vh;
+  background: #fff;
+  border: 1px solid #ececf2;
+  border-radius: 18px;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, .18), 0 4px 16px rgba(99, 102, 241, .12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 2147483601;
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
+}
+#ais-floating-panel .ais-card-body {
+  flex: 1;
+  display: flex;
+  height: auto;
+}
+#ais-floating-panel .ais-card-body iframe {
+  flex: 1;
+  width: 100%;
+  height: 580px;
+  border: 0;
+  display: block;
+}
+
+html[dark] #ais-floating-panel,
+html[data-theme="dark"] #ais-floating-panel {
+  background: #0f0f0f;
+  border-color: #2a2a2a;
+}

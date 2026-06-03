@@ -1,0 +1,1031 @@
+import { getSettings, setSettings, getApiKeys } from '../lib/ai-api.js';
+import { getSession } from '../lib/supabase.js';
+import { LANGUAGES, DEFAULT_SETTINGS, MODELS, modelsByProvider, RELEASE_MODE, HAS_SUPABASE, HAS_PRO } from '../lib/config.js';
+import { getTierStatus } from '../lib/tier.js';
+import { FEATURES, canUse, isProModel } from '../lib/features.js';
+import { getAllTemplates } from '../lib/templates.js';
+
+const t = (k) => chrome.i18n.getMessage(k) || k;
+
+// --------------------------------------------------------------------- DOM
+const $ = (id) => document.getElementById(id);
+
+const langChip      = $('langChip');
+const langChipLabel = $('langChipLabel');
+const lengthChip      = $('lengthChip');
+const lengthChipLabel = $('lengthChipLabel');
+const modelChip      = $('modelChip');
+const modelChipLabel = $('modelChipLabel');
+const templateChip      = $('templateChip');
+const templateChipLabel = $('templateChipLabel');
+const templateMenu      = $('templateMenu');
+
+const urlInput     = $('urlInput');
+const runBtn       = $('runBtn');
+const tiles        = document.querySelectorAll('.tile');
+const pdfPickBtn   = $('pdfPickBtn');
+const pdfFileInput = $('pdfFileInput');
+const srcRow       = $('srcRow');
+const srcIcon      = $('srcIcon');
+const srcLabel     = $('srcLabel');
+
+const accountBtn   = $('accountBtn');
+const settingsBtn  = $('settingsBtn');
+const historyBtn   = $('historyBtn');
+
+const langMenu   = $('langMenu');
+const lengthMenu = $('lengthMenu');
+const modelMenu  = $('modelMenu');
+
+const stateEmpty   = $('empty');
+const stateLoading = $('loading');
+const stateError   = $('error');
+const errorText    = $('errorText');
+const errorBtn     = $('errorActionBtn');
+const loadingLabel = $('loadingLabel');
+
+const result        = $('result');
+const resultHeader  = $('resultHeader');
+const resultMeta    = $('resultMeta');
+const resultBody    = $('resultBody');
+const regenBtn      = $('regenBtn');
+const copyBtn       = $('copyBtn');
+const stopBtn       = $('stopBtn');
+const fallbackBanner    = $('fallbackBanner');
+const loadingProgress   = $('loadingProgress');
+const loadingProgressBar = $('loadingProgressBar');
+const downloadBtn       = $('downloadBtn');
+const chatBox       = $('chat');
+const chatHistory   = $('chatHistory');
+const chatForm      = $('chatForm');
+const chatInput     = $('chatInput');
+const chatSendBtn   = $('chatSendBtn');
+
+// --------------------------------------------------------------------- state
+let settings = { ...DEFAULT_SETTINGS };
+let lastJob  = null;
+let currentTier = 'free';
+let upsellContext = null;   // { feature: <FEATURES.X>, pendingKind: 'summary'|'timestamps' }
+
+// --------------------------------------------------------------------- upsell
+
+const upsellModal = $('upsellModal');
+const upsellGoBtn = $('upsellGoBtn');
+
+function openUpsell(feature, pendingKind) {
+  upsellContext = { feature, pendingKind };
+  upsellModal.hidden = false;
+}
+function closeUpsell() {
+  upsellModal.hidden = true;
+  upsellContext = null;
+}
+
+// Triple-layered close handling so nothing slips through:
+// (1) Event delegation on document for any [data-modal-close] element
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if (t && (t.matches('[data-modal-close]') || (typeof t.closest === 'function' && t.closest('[data-modal-close]')))) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeUpsell();
+  }
+}, true /* capture phase — runs before bubbled menu-hide listener */);
+
+// (2) Direct binding on the modal itself (idempotent)
+upsellModal.addEventListener('click', (e) => {
+  if (e.target === upsellModal || e.target.closest('[data-modal-close]')) {
+    closeUpsell();
+  }
+});
+
+// (3) Esc key closes modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !upsellModal.hidden) {
+    e.preventDefault();
+    closeUpsell();
+  }
+});
+
+// Price card selection
+document.querySelectorAll('.price-card').forEach((card) => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.price-card').forEach((c) => c.classList.remove('is-selected'));
+    card.classList.add('is-selected');
+    card.querySelector('input[type=radio]').checked = true;
+  });
+});
+
+upsellGoBtn.addEventListener('click', () => {
+  const plan = document.querySelector('input[name=ais-plan]:checked')?.value || 'yearly';
+  // Open billing page in a new tab with the chosen plan preselected.
+  const url = chrome.runtime.getURL('options/options.html?upgrade=' + encodeURIComponent(plan));
+  chrome.tabs.create({ url });
+  closeUpsell();
+});
+
+// --------------------------------------------------------------------- menus
+
+function buildLangMenu() {
+  langMenu.innerHTML = '';
+  // Search box at the top — instant filter as user types
+  const search = document.createElement('input');
+  search.type = 'text';
+  search.className = 'menu-search';
+  search.placeholder = chrome.i18n.getMessage('langSearch') || 'Search…';
+  langMenu.appendChild(search);
+
+  const listEl = document.createElement('div');
+  listEl.className = 'menu-list';
+  langMenu.appendChild(listEl);
+
+  function render(filter) {
+    listEl.innerHTML = '';
+    const q = (filter || '').toLowerCase().trim();
+    const items = q
+      ? LANGUAGES.filter((l) => l.label.toLowerCase().includes(q) || l.code.includes(q))
+      : LANGUAGES;
+    for (const l of items) {
+      const b = document.createElement('button');
+      b.className = 'menu-item';
+      b.textContent = l.label;
+      b.dataset.value = l.code;
+      if (settings.language === l.code) b.classList.add('is-selected');
+      b.addEventListener('click', () => {
+        setSettings({ language: l.code }).then(() => {
+          settings.language = l.code;
+          updateChips();
+          hideMenus();
+        });
+      });
+      listEl.appendChild(b);
+    }
+  }
+  render();
+  search.addEventListener('input', () => render(search.value));
+  // Auto-focus search when menu opens
+  langMenu.addEventListener('aismenu:open', () => { search.value = ''; render(); search.focus(); });
+}
+
+function buildModelMenu() {
+  modelMenu.innerHTML = '';
+  const groups = modelsByProvider();
+  const providerLabels = { gemini: 'Google Gemini', openai: 'OpenAI', anthropic: 'Anthropic Claude' };
+
+  // Auto entry first
+  const autoBtn = document.createElement('button');
+  autoBtn.className = 'menu-item' + (settings.model === 'auto' ? ' is-selected' : '');
+  autoBtn.dataset.value = 'auto';
+  autoBtn.textContent = chrome.i18n.getMessage('modelAuto') || 'Auto';
+  modelMenu.appendChild(autoBtn);
+
+  for (const prov of ['gemini', 'openai', 'anthropic']) {
+    const hdr = document.createElement('div');
+    hdr.className = 'menu-section';
+    hdr.textContent = providerLabels[prov];
+    modelMenu.appendChild(hdr);
+    for (const m of groups[prov]) {
+      const b = document.createElement('button');
+      b.className = 'menu-item' + (settings.model === m.key ? ' is-selected' : '');
+      b.dataset.value = m.key;
+      if (m.group === 'pro') b.dataset.pro = '1';
+      b.textContent = m.label;
+      modelMenu.appendChild(b);
+    }
+  }
+}
+
+let cachedTemplates = [];
+async function buildTemplateMenu() {
+  cachedTemplates = await getAllTemplates();
+  templateMenu.innerHTML = '';
+  cachedTemplates.forEach((tpl) => {
+    const b = document.createElement('button');
+    b.className = 'menu-item' + (tpl.id === (settings.templateId || 'standard') ? ' is-selected' : '');
+    b.dataset.value = tpl.id;
+    b.title = tpl.description || '';
+    b.innerHTML = `<span>${tpl.name}</span>${!tpl.builtin ? '<span class="pill">custom</span>' : ''}`;
+    if (!tpl.builtin) b.dataset.pro = '1';
+    b.addEventListener('click', async () => {
+      if (!tpl.builtin && currentTier !== 'pro') {
+        hideMenus();
+        openUpsell(FEATURES.CUSTOM_PROMPTS);
+        return;
+      }
+      await setSettings({ templateId: tpl.id });
+      settings.templateId = tpl.id;
+      templateChipLabel.textContent = tpl.name;
+      hideMenus();
+    });
+    templateMenu.appendChild(b);
+  });
+}
+
+function positionMenu(menu, anchor) {
+  const r = anchor.getBoundingClientRect();
+  menu.style.top  = (r.bottom + 4) + 'px';
+  menu.style.left = r.left + 'px';
+  menu.hidden = false;
+}
+
+function hideMenus() {
+  langMenu.hidden = true;
+  lengthMenu.hidden = true;
+  modelMenu.hidden = true;
+  templateMenu.hidden = true;
+}
+
+function wireMenu(chip, menu, key) {
+  chip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const wasHidden = menu.hidden;
+    hideMenus();
+    if (wasHidden) {
+      positionMenu(menu, chip);
+      menu.dispatchEvent(new CustomEvent('aismenu:open'));
+    }
+  });
+  // Event delegation so dynamically-added .menu-item entries still work.
+  menu.addEventListener('click', async (e) => {
+    const item = e.target.closest('.menu-item');
+    if (!item || !menu.contains(item)) return;
+    const value = item.dataset.value;
+    if (HAS_PRO && key === 'model' && item.dataset.pro === '1' && currentTier !== 'pro') {
+      hideMenus();
+      openUpsell(FEATURES.PREMIUM_MODELS);
+      return;
+    }
+    await setSettings({ [key]: value });
+    settings[key] = value;
+    updateChips();
+    hideMenus();
+  });
+}
+
+function applyTierToUI() {
+  // In free release mode, treat everyone as Pro for gating purposes — there
+  // is no Pro tier yet, so don't show any locks or upsell triggers.
+  if (!HAS_PRO) {
+    document.querySelectorAll('.tile[data-pro-feature] .lock-badge').forEach((b) => { b.hidden = true; });
+    document.querySelectorAll('.menu-item[data-pro]').forEach((b) => { b.removeAttribute('data-pro'); });
+    if (accountBtn) accountBtn.hidden = !HAS_SUPABASE;
+    return;
+  }
+  const isFree = currentTier !== 'pro';
+  document.querySelectorAll('.tile[data-pro-feature] .lock-badge').forEach((b) => {
+    b.hidden = !isFree;
+  });
+}
+
+document.addEventListener('click', () => hideMenus());
+
+// --------------------------------------------------------------------- chips
+
+function langLabel(code) {
+  const l = LANGUAGES.find((x) => x.code === code);
+  return l ? l.label : code;
+}
+function modelLabel(key) {
+  if (key === 'auto') return t('modelAuto');
+  return (MODELS[key] && MODELS[key].label) || key;
+}
+function lengthLabel(key) {
+  if (key === 'short')  return t('lengthShort');
+  if (key === 'medium') return t('lengthMedium');
+  if (key === 'long')   return t('lengthLong');
+  return key;
+}
+
+function updateChips() {
+  langChipLabel.textContent   = langLabel(settings.language);
+  lengthChipLabel.textContent = lengthLabel(settings.length);
+  modelChipLabel.textContent  = modelLabel(settings.model);
+  if (cachedTemplates.length) {
+    const cur = cachedTemplates.find((x) => x.id === (settings.templateId || 'standard')) || cachedTemplates[0];
+    templateChipLabel.textContent = cur ? cur.name : 'Standard';
+  }
+
+  document.querySelectorAll('#langMenu .menu-item').forEach((el) =>
+    el.classList.toggle('is-selected', el.dataset.value === settings.language));
+  document.querySelectorAll('#lengthMenu .menu-item').forEach((el) =>
+    el.classList.toggle('is-selected', el.dataset.value === settings.length));
+  document.querySelectorAll('#modelMenu .menu-item').forEach((el) =>
+    el.classList.toggle('is-selected', el.dataset.value === settings.model));
+}
+
+// --------------------------------------------------------------------- url
+
+// Local copy of the dispatcher's detector so we can run it in the popup
+// without async-importing the extractor module.
+function detectKindLocal(url) {
+  if (!url) return { kind: 'unknown' };
+  let u;
+  try { u = new URL(url); } catch (_) { return { kind: 'unknown' }; }
+  const host = u.hostname.toLowerCase();
+  const path = u.pathname.toLowerCase();
+  if (path.endsWith('.pdf')) return { kind: 'pdf' };
+  if (host === 'youtu.be' || host.endsWith('youtube.com') || host.endsWith('youtube-nocookie.com')) return { kind: 'youtube' };
+  if (host.endsWith('vimeo.com'))    return { kind: 'vimeo' };
+  if (host.endsWith('twitch.tv'))    return { kind: 'twitch' };
+  if (host.endsWith('tiktok.com'))   return { kind: 'social', subKind: 'tiktok' };
+  if (host.endsWith('instagram.com')) return { kind: 'social', subKind: 'instagram' };
+  if (host === 'x.com' || host === 'twitter.com') return { kind: 'social', subKind: 'twitter' };
+  return { kind: 'webpage' };
+}
+
+function sourceLabelKey(kind, subKind) {
+  switch (kind) {
+    case 'youtube':  return 'srcYoutube';
+    case 'vimeo':    return 'srcVimeo';
+    case 'twitch':   return 'srcTwitch';
+    case 'pdf':      return 'srcPdf';
+    case 'social':
+      if (subKind === 'instagram') return 'srcInstagram';
+      if (subKind === 'twitter')   return 'srcTwitter';
+      return 'srcTiktok';
+    case 'webpage':
+    default:         return 'srcWebpage';
+  }
+}
+
+function sourceIconPath(kind) {
+  // Simple mono icons via SVG path data.
+  switch (kind) {
+    case 'youtube':
+    case 'vimeo':
+    case 'twitch':
+      return 'M8 5v14l11-7z'; // play triangle
+    case 'social':
+      return 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z';
+    case 'pdf':
+      return 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6';
+    case 'webpage':
+    default:
+      return 'M19 5v14H5V5h14m0-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zM7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z';
+  }
+}
+
+function updateSourceChip(url) {
+  if (!url) {
+    srcRow.hidden = true;
+    return;
+  }
+  const det = detectKindLocal(url);
+  if (det.kind === 'unknown') {
+    srcRow.hidden = true;
+    return;
+  }
+  const labelKey = sourceLabelKey(det.kind, det.subKind);
+  srcLabel.textContent = t(labelKey);
+  const path = srcIcon.querySelector('path');
+  if (path) path.setAttribute('d', sourceIconPath(det.kind));
+  srcRow.hidden = false;
+}
+
+async function prefillFromActiveTab() {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const url = tabs && tabs[0] && tabs[0].url;
+    if (url && /^https?:/i.test(url)) {
+      // Prefill anything we can summarise (videos, articles, PDFs).
+      const det = detectKindLocal(url);
+      if (det.kind !== 'unknown') urlInput.value = url;
+    }
+  } catch (_) { /* ignore */ }
+}
+
+// --------------------------------------------------------------------- markdown
+
+function escHTML(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Tiny Markdown renderer — handles headings, bold, italic, lists, links, code,
+// and timestamp links of the form "MM:SS" or "H:MM:SS" at line start.
+function renderMarkdown(md, videoId) {
+  const lines = md.split('\n');
+  const out = [];
+  let inUl = false, inOl = false;
+  const closeLists = () => {
+    if (inUl) { out.push('</ul>'); inUl = false; }
+    if (inOl) { out.push('</ol>'); inOl = false; }
+  };
+
+  function inline(s) {
+    s = escHTML(s);
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|\s)\*([^*]+)\*/g, '$1<em>$2</em>');
+    s = s.replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    if (videoId) {
+      s = s.replace(/(^|\s|[\[(])(\d{1,2}:\d{2}(?::\d{2})?)/g, (_m, pre, ts) => {
+        const sec = ts.split(':').reduce((a, b) => a * 60 + parseInt(b, 10), 0);
+        const u = `https://www.youtube.com/watch?v=${videoId}&t=${sec}s`;
+        return `${pre}<a class="ts" href="${u}" target="_blank" rel="noopener">${ts}</a>`;
+      });
+    }
+    return s;
+  }
+
+  for (let raw of lines) {
+    const line = raw.replace(/\s+$/, '');
+    if (!line.trim()) { closeLists(); continue; }
+
+    let m;
+    if ((m = line.match(/^(#{1,3})\s+(.+)$/))) {
+      closeLists();
+      const lvl = m[1].length;
+      out.push(`<h${lvl}>${inline(m[2])}</h${lvl}>`);
+      continue;
+    }
+    if (line.match(/^[-*]\s+/)) {
+      if (!inUl) { closeLists(); out.push('<ul>'); inUl = true; }
+      out.push('<li>' + inline(line.replace(/^[-*]\s+/, '')) + '</li>');
+      continue;
+    }
+    if (line.match(/^\d+\.\s+/)) {
+      if (!inOl) { closeLists(); out.push('<ol>'); inOl = true; }
+      out.push('<li>' + inline(line.replace(/^\d+\.\s+/, '')) + '</li>');
+      continue;
+    }
+    closeLists();
+    out.push('<p>' + inline(line) + '</p>');
+  }
+  closeLists();
+  return out.join('\n');
+}
+
+// --------------------------------------------------------------------- run
+
+function showState(which) {
+  stateEmpty.hidden    = which !== 'empty';
+  stateLoading.hidden  = which !== 'loading';
+  stateError.hidden    = which !== 'error';
+  result.hidden        = which !== 'result';
+}
+
+function showError(msg, action) {
+  errorText.textContent = msg;
+  if (action) {
+    errorBtn.hidden = false;
+    errorBtn.textContent = action.label;
+    errorBtn.onclick = action.handler;
+  } else {
+    errorBtn.hidden = true;
+    errorBtn.onclick = null;
+  }
+  showState('error');
+}
+
+// --------------------------------------------------------------------- streaming
+
+let activePort = null;          // current chrome.runtime.Port, or null
+let streamedText = '';          // accumulated text so far
+let streamedMeta = null;        // { videoId, model, provider, title, channel }
+let rerenderScheduled = false;  // microtask batching for renderProgress
+let lastResult = null;          // full result object — used for export
+
+function cancelActiveStream() {
+  if (activePort) {
+    try { activePort.disconnect(); } catch (_) {}
+    activePort = null;
+  }
+  setStreamingUI(false);
+}
+
+function setStreamingUI(streaming) {
+  if (!stopBtn || !regenBtn) return;
+  stopBtn.hidden  = !streaming;
+  regenBtn.hidden =  streaming;
+}
+
+function scheduleRerender(kind) {
+  if (rerenderScheduled) return;
+  rerenderScheduled = true;
+  requestAnimationFrame(() => {
+    rerenderScheduled = false;
+    renderProgress(kind);
+  });
+}
+
+function renderProgress(kind) {
+  const videoId = streamedMeta && streamedMeta.videoId;
+  // Show a soft "▍" cursor while streaming.
+  const html = renderMarkdown(streamedText, videoId) + '<span class="ais-cursor">▍</span>';
+  resultBody.innerHTML = html;
+}
+
+function renderFinal(result, kind) {
+  lastResult = result;
+  resultHeader.textContent = t(kind === 'timestamps' ? 'timestampsHeader' : 'summaryHeader');
+  const m = result.meta || {};
+  const provider = result.provider ? result.provider.toUpperCase() : '';
+  resultMeta.textContent = [m.title, provider && '· ' + provider, result.model && '· ' + result.model].filter(Boolean).join(' ');
+  resultBody.innerHTML = renderMarkdown(result.text, result.videoId);
+
+  // Activate Q&A chat
+  currentSourceKey = result.videoId ? ('vid:' + result.videoId)
+                  : result.url      ? ('url:' + result.url)
+                  : null;
+  currentSourceKind = result.sourceKind || 'webpage';
+  if (currentSourceKey) {
+    chatBox.hidden = false;
+    chatHistory.innerHTML = '';
+    chatInput.value = '';
+    chatInput.disabled = false;
+    chatSendBtn.disabled = false;
+  } else {
+    chatBox.hidden = true;
+  }
+}
+
+// ---------------------------------------------------------------------- chat
+
+let currentSourceKey  = null;
+let currentSourceKind = 'webpage';
+let chatStreamingBubble = null;
+let chatActivePort = null;
+
+function addBubble(role, html) {
+  const b = document.createElement('div');
+  b.className = 'bubble ' + role + (role === 'assistant' ? ' markdown' : '');
+  b.innerHTML = html;
+  chatHistory.appendChild(b);
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+  return b;
+}
+
+function sendChatQuestion(question) {
+  if (!currentSourceKey) return;
+  if (chatActivePort) { try { chatActivePort.disconnect(); } catch (_) {} chatActivePort = null; }
+
+  // User bubble (plain text — no markdown)
+  addBubble('user', escHTML(question));
+  chatInput.value = '';
+  chatInput.disabled  = true;
+  chatSendBtn.disabled = true;
+
+  // Assistant bubble (streaming target)
+  chatStreamingBubble = addBubble('assistant', '');
+  chatStreamingBubble.classList.add('is-streaming');
+  let acc = '';
+
+  const port = chrome.runtime.connect({ name: 'ais-stream' });
+  chatActivePort = port;
+  port.onMessage.addListener((msg) => {
+    if (!msg) return;
+    if (msg.type === 'AIS_CHAT_START') { /* nothing — already showed empty bubble */ return; }
+    if (msg.type === 'AIS_CHAT_DELTA') {
+      acc += (msg.text || '');
+      chatStreamingBubble.innerHTML = renderMarkdown(acc, videoIdForLinks());
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+      return;
+    }
+    if (msg.type === 'AIS_CHAT_DONE') {
+      chatStreamingBubble.innerHTML = renderMarkdown(msg.text || acc, videoIdForLinks());
+      chatStreamingBubble.classList.remove('is-streaming');
+      chatStreamingBubble = null;
+      chatActivePort = null;
+      chatInput.disabled  = false;
+      chatSendBtn.disabled = false;
+      chatInput.focus();
+      return;
+    }
+    if (msg.type === 'AIS_ERR') {
+      if (msg.code === 'NO_CONTEXT') {
+        chatStreamingBubble.textContent = t('chatNoContext');
+      } else if (msg.code === 'PRO_REQUIRED') {
+        chatStreamingBubble.textContent = t('errorProRequired');
+      } else {
+        chatStreamingBubble.textContent = msg.error || t('errorGeneric');
+      }
+      chatStreamingBubble.classList.remove('is-streaming');
+      chatStreamingBubble.classList.add('user');         // visually flag as error
+      chatStreamingBubble.classList.remove('assistant');
+      chatStreamingBubble = null;
+      chatActivePort = null;
+      chatInput.disabled  = false;
+      chatSendBtn.disabled = false;
+    }
+  });
+  port.onDisconnect.addListener(() => {
+    if (chatActivePort === port) chatActivePort = null;
+  });
+
+  port.postMessage({
+    type:        'AIS_CHAT',
+    sourceKey:   currentSourceKey,
+    sourceKind:  currentSourceKind,
+    question,
+    language:    settings.language,
+    modelKey:    settings.model,
+    source:      settings.source || 'api',
+  });
+}
+
+function videoIdForLinks() {
+  // Convert sourceKey back into a video id when applicable so timestamps in
+  // chat replies get clickable links.
+  if (currentSourceKey && currentSourceKey.startsWith('vid:')) {
+    return currentSourceKey.slice(4);
+  }
+  return null;
+}
+
+chatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const q = chatInput.value.trim();
+  if (!q || chatActivePort) return;
+  sendChatQuestion(q);
+});
+
+// PDF picker state — when user uploads a PDF from disk we cache the bytes here
+let pendingPdf = null;   // { bytes: Uint8Array, name: string }
+
+async function run(kind) {
+  const url = urlInput.value.trim();
+  const det = pendingPdf ? { kind: 'pdf' } : detectKindLocal(url);
+  if (det.kind === 'unknown' && !pendingPdf) {
+    showError(t('errorGeneric') + ' (URL?)');
+    return;
+  }
+  // Sign-in is only required in the 'full' release mode (when Supabase + Pro
+  // infra is wired up). In 'free' mode the extension is purely BYOK.
+  if (RELEASE_MODE === 'full' && HAS_SUPABASE) {
+    const session = await getSession();
+    if (!session) {
+      showError(t('errorAuth'), { label: t('authSignIn'), handler: () => {
+        chrome.runtime.sendMessage({ type: 'AIS_OPEN_AUTH' });
+      }});
+      return;
+    }
+  }
+
+  cancelActiveStream();
+  streamedText = '';
+  streamedMeta = null;
+
+  showState('loading');
+  loadingLabel.textContent = t('loadingTranscript');
+
+  const payload = {
+    kind,
+    url:          pendingPdf ? null : url,
+    pdfBytes:     pendingPdf ? Array.from(pendingPdf.bytes) : null,  // serialize for messaging
+    pdfName:      pendingPdf ? pendingPdf.name : null,
+    pdfMode:      settings.pdfMode || 'gemini',
+    language:     settings.language,
+    length:       settings.length,
+    modelKey:     settings.model,
+    source:       settings.source || 'api',
+    templateId:   settings.templateId || 'standard',
+  };
+
+  lastJob = { kind, payload };
+
+  const port = chrome.runtime.connect({ name: 'ais-stream' });
+  activePort = port;
+  setStreamingUI(true);
+
+  // Reset transient UI for a new run
+  fallbackBanner.hidden = true;
+  loadingProgress.hidden = true;
+  loadingProgressBar.style.width = '0%';
+
+  port.onMessage.addListener((msg) => {
+    if (!msg) return;
+    if (msg.type === 'AIS_PHASE') {
+      if (msg.phase === 'transcript') {
+        loadingLabel.textContent = t('loadingTranscript');
+        loadingProgress.hidden = true;
+      }
+      if (msg.phase === 'generate') {
+        loadingLabel.textContent = t('loadingSummary');
+        loadingProgress.hidden = true;
+      }
+      if (msg.phase === 'map') {
+        loadingLabel.textContent = chrome.i18n.getMessage('loadingChunk', ['0', '?']) || 'Analysing chunks…';
+        loadingProgress.hidden = false;
+      }
+      if (msg.phase === 'synthesis') {
+        loadingLabel.textContent = t('loadingSynthesis');
+        loadingProgress.hidden = true;
+      }
+      return;
+    }
+    if (msg.type === 'AIS_CHUNKS') {
+      const total = msg.total || 0;
+      const done  = msg.done  || 0;
+      loadingProgress.hidden = false;
+      loadingProgressBar.style.width = total ? Math.round((done / total) * 100) + '%' : '0%';
+      loadingLabel.textContent = chrome.i18n.getMessage('loadingChunk', [String(done), String(total)])
+                              || ('Analysing section ' + done + '/' + total + '…');
+      return;
+    }
+    if (msg.type === 'AIS_META') {
+      streamedMeta = msg.meta;
+      resultHeader.textContent = t(kind === 'timestamps' ? 'timestampsHeader' : 'summaryHeader');
+      const provider = msg.meta.provider ? msg.meta.provider.toUpperCase() : '';
+      resultMeta.textContent = [msg.meta.title, provider && '· ' + provider, msg.meta.model && '· ' + msg.meta.model].filter(Boolean).join(' ');
+      return;
+    }
+    if (msg.type === 'AIS_DELTA') {
+      if (stateLoading.hidden === false) {
+        // First delta — switch to result view.
+        resultBody.innerHTML = '';
+        showState('result');
+      }
+      streamedText += msg.text || '';
+      scheduleRerender(kind);
+      return;
+    }
+    if (msg.type === 'AIS_DONE') {
+      renderFinal(msg.result, kind);
+      // Show banner if we fell back to API after a bridge failure.
+      if (msg.result && msg.result.via === 'api-fallback') {
+        const provName = (msg.result.provider || '').toUpperCase();
+        fallbackBanner.textContent =
+          chrome.i18n.getMessage('bannerApiFallback', [provName]) || ('Switched to API (' + provName + ')');
+        fallbackBanner.hidden = false;
+      } else {
+        fallbackBanner.hidden = true;
+      }
+      showState('result');
+      activePort = null;
+      setStreamingUI(false);
+      return;
+    }
+    if (msg.type === 'AIS_ERR') {
+      activePort = null;
+      setStreamingUI(false);
+      if (msg.code === 'NO_API_KEY') {
+        showError(t('errorNoApiKey'), {
+          label: t('saveSettings'),
+          handler: () => chrome.runtime.sendMessage({ type: 'AIS_OPEN_OPTIONS' }),
+        });
+        return;
+      }
+      if (msg.code === 'BRIDGE_NOT_READY' || msg.code === 'BRIDGE_DOWN_NO_API_KEY') {
+        showError(
+          'Login to ' + (msg.provider || '') + ' first, then try again — or add an API key in settings.',
+          { label: 'Open ' + (msg.provider || ''),
+            handler: () => chrome.tabs.create({ url: msg.bridgeUrl || 'https://gemini.google.com/' }) }
+        );
+        return;
+      }
+      // In free release mode we never show the upsell modal — defensively swallow
+      // Pro-tier errors and show a generic message instead (shouldn't happen since
+      // the service worker also short-circuits these checks in free mode).
+      if (msg.code === 'PRO_REQUIRED') {
+        if (HAS_PRO) {
+          showState('empty');
+          openUpsell(msg.feature || FEATURES.PREMIUM_MODELS);
+        } else {
+          showError(msg.error || t('errorGeneric'));
+        }
+        return;
+      }
+      if (msg.code === 'QUOTA_EXCEEDED') {
+        showError(t('errorQuotaExceeded'),
+          HAS_PRO ? { label: t('btnUpgrade'), handler: () => openUpsell(FEATURES.PREMIUM_MODELS) } : null);
+        return;
+      }
+      if (msg.code === 'VIDEO_TOO_LONG') {
+        showError(t('errorVideoTooLong'),
+          HAS_PRO ? { label: t('btnUpgrade'), handler: () => openUpsell(FEATURES.LONG_VIDEOS) } : null);
+        return;
+      }
+      if (msg.code === 'TIMESTAMPS_NOT_AVAILABLE') {
+        showError(t('errorTimestampsUnavailable'));
+        return;
+      }
+      if (msg.code === 'PDF_REQUIRES_GEMINI') {
+        showError(t('errorPdfNeedsGemini'));
+        return;
+      }
+      if (msg.code === 'PDF_TOO_LARGE') {
+        showError(t('errorPdfTooLarge'));
+        return;
+      }
+      if (msg.code === 'PDFJS_MISSING') {
+        showError(t('errorPdfjsMissing'));
+        return;
+      }
+      const text = msg.error || t('errorGeneric');
+      if (/no-captions|NO_CAPTIONS|empty-transcript/.test(text)) {
+        showError(t('errorNoTranscript'));
+      } else {
+        showError(text);
+      }
+    }
+  });
+
+  port.onDisconnect.addListener(() => {
+    if (activePort === port) {
+      activePort = null;
+      setStreamingUI(false);
+    }
+  });
+
+  port.postMessage({ type: 'AIS_RUN', payload });
+}
+
+// --------------------------------------------------------------------- buttons
+
+runBtn.addEventListener('click', () => run('summary'));
+tiles.forEach((tile) => {
+  tile.addEventListener('click', () => {
+    const proFeature = tile.dataset.proFeature;
+    // Honor Pro gates only in full release mode.
+    if (HAS_PRO && proFeature && !canUse(proFeature, currentTier)) {
+      openUpsell(proFeature, tile.dataset.kind);
+      return;
+    }
+    run(tile.dataset.kind);
+  });
+});
+
+regenBtn.addEventListener('click', () => {
+  if (lastJob) run(lastJob.kind);
+});
+
+stopBtn.addEventListener('click', () => {
+  cancelActiveStream();
+  // Keep the partial text on screen so user can still copy what arrived.
+  if (streamedText) {
+    resultBody.innerHTML = renderMarkdown(streamedText, streamedMeta && streamedMeta.videoId);
+    showState('result');
+  }
+});
+
+function buildMarkdownExport(result, kind) {
+  if (!result) return '';
+  const m = result.meta || {};
+  const headerKind = kind === 'timestamps' ? 'Timestamps'
+                   : kind === 'comments'   ? 'Comments'
+                   :                          'Summary';
+  const parts = [];
+  if (m.title) parts.push('# ' + m.title);
+  const metaLine = [
+    m.channel && `**${m.channel}**`,
+    result.url || (result.videoId && `https://www.youtube.com/watch?v=${result.videoId}`),
+    result.model && `_${result.model}_`,
+    `_${headerKind}_`,
+  ].filter(Boolean);
+  if (metaLine.length) parts.push(metaLine.join(' · '));
+  parts.push('');
+  parts.push(result.text || '');
+  parts.push('');
+  parts.push('---');
+  parts.push('_Generated by AI Summarizer_');
+  return parts.join('\n');
+}
+
+function safeFilename(s) {
+  return String(s || 'summary')
+    .replace(/[\\/:*?"<>|]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80) || 'summary';
+}
+
+copyBtn.addEventListener('click', async () => {
+  try {
+    // Copy as raw Markdown so users can paste into Notion / Obsidian / Bear.
+    const md = lastResult ? buildMarkdownExport(lastResult, lastJob && lastJob.kind) : resultBody.innerText;
+    await navigator.clipboard.writeText(md);
+    const old = copyBtn.getAttribute('title');
+    copyBtn.setAttribute('title', t('btnCopied'));
+    setTimeout(() => copyBtn.setAttribute('title', old || ''), 1500);
+  } catch (_) {}
+});
+
+downloadBtn.addEventListener('click', () => {
+  if (!lastResult) return;
+  const md = buildMarkdownExport(lastResult, lastJob && lastJob.kind);
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = safeFilename(lastResult.meta && lastResult.meta.title) + '.md';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+accountBtn.addEventListener('click', async () => {
+  const s = await getSession();
+  if (!s) {
+    chrome.runtime.sendMessage({ type: 'AIS_OPEN_AUTH' });
+  } else {
+    chrome.runtime.sendMessage({ type: 'AIS_OPEN_OPTIONS' });
+  }
+});
+settingsBtn.addEventListener('click', () => {
+  chrome.runtime.sendMessage({ type: 'AIS_OPEN_OPTIONS' });
+});
+
+historyBtn.addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });
+});
+
+urlInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') run('summary');
+});
+urlInput.addEventListener('input', () => {
+  if (urlInput.value.trim()) {
+    pendingPdf = null;
+    updateSourceChip(urlInput.value.trim());
+  } else {
+    srcRow.hidden = true;
+  }
+});
+
+pdfPickBtn.addEventListener('click', () => pdfFileInput.click());
+pdfFileInput.addEventListener('change', async (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  if (!f.name.toLowerCase().endsWith('.pdf') && f.type !== 'application/pdf') {
+    showError('Not a PDF file');
+    return;
+  }
+  const buf = await f.arrayBuffer();
+  pendingPdf = { bytes: new Uint8Array(buf), name: f.name };
+  urlInput.value = f.name;
+  urlInput.disabled = true;
+  srcLabel.textContent = t('srcPdf');
+  const path = srcIcon.querySelector('path');
+  if (path) path.setAttribute('d', sourceIconPath('pdf'));
+  srcRow.hidden = false;
+});
+// Reset PDF picker if user clears the input
+urlInput.addEventListener('focus', () => {
+  if (pendingPdf && urlInput.value === pendingPdf.name) {
+    urlInput.disabled = false;
+    urlInput.value = '';
+    pendingPdf = null;
+    srcRow.hidden = true;
+  }
+});
+
+// --------------------------------------------------------------------- init
+
+function detectEmbedContext() {
+  const isEmbed = window !== window.top;
+  if (isEmbed) document.body.classList.add('embed');
+}
+
+function listenForThemeMessages() {
+  window.addEventListener('message', (e) => {
+    if (e && e.data && e.data.type === 'AIS_THEME') {
+      document.body.classList.toggle('dark', !!e.data.dark);
+    }
+  });
+  // Also apply system preference as a default for the standalone popup.
+  if (window === window.top && window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    document.body.classList.toggle('dark', mq.matches);
+    mq.addEventListener && mq.addEventListener('change', (e) => document.body.classList.toggle('dark', e.matches));
+  }
+}
+
+async function init() {
+  detectEmbedContext();
+  listenForThemeMessages();
+  settings = { ...DEFAULT_SETTINGS, ...(await getSettings()) };
+  buildLangMenu();
+  buildModelMenu();
+  await buildTemplateMenu();
+  wireMenu(langChip,     langMenu,     'language');
+  wireMenu(lengthChip,   lengthMenu,   'length');
+  wireMenu(modelChip,    modelMenu,    'model');
+  wireMenu(templateChip, templateMenu, 'templateId');
+  if (window.AIS_I18N) window.AIS_I18N.applyI18n();
+  updateChips();
+  await prefillFromActiveTab();
+
+  const session = (RELEASE_MODE === 'full' && HAS_SUPABASE) ? await getSession() : null;
+  accountBtn.classList.toggle('unauthed', !session);
+  // Hide the history button in free mode if there's literally no history yet —
+  // it's still functional (local store), so we keep it visible by default.
+
+  if (HAS_PRO && session) {
+    const tier = await getTierStatus();
+    currentTier = tier.tier || 'free';
+  } else if (!HAS_PRO) {
+    currentTier = 'pro';   // unlock everything in free release
+  }
+  applyTierToUI();
+  if (urlInput.value) updateSourceChip(urlInput.value);
+
+  // If user has no API keys AND source is "api", warn them
+  const keys = await getApiKeys();
+  const hasAnyKey = !!(keys.gemini || keys.openai || keys.anthropic);
+  if (!hasAnyKey && settings.source !== 'browser') {
+    // soft hint via meta — not blocking
+  }
+}
+
+init();

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy — AI Summarizer</title>
+  <meta name="description" content="Privacy Policy for the AI Summarizer Chrome extension." />
+  <meta name="robots" content="index, follow" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --text:        #1a1a1f;
+      --text-soft:   #4b5563;
+      --text-mute:   #6b7280;
+      --accent:      #6366f1;
+      --accent-2:    #a855f7;
+      --border:      #e5e7eb;
+      --bg:          #fafafa;
+      --surface:     #ffffff;
+      --code-bg:     #f3f0ff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text:      #f1f1f1;
+        --text-soft: #d1d5db;
+        --text-mute: #9ca3af;
+        --border:    #2a2a2a;
+        --bg:        #0f0f0f;
+        --surface:   #18181b;
+        --code-bg:   #2a2538;
+      }
+    }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body {
+      font: 16px/1.65 -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
+      padding: 48px 20px 80px;
+    }
+    main { max-width: 720px; margin: 0 auto; }
+    header { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+    header .logo {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 26px;
+    }
+    header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+    header .lead { margin: 2px 0 0; color: var(--text-mute); font-size: 14px; }
+
+    h2 { margin-top: 40px; margin-bottom: 8px; font-size: 20px; font-weight: 700; }
+    h3 { margin-top: 22px; margin-bottom: 6px; font-size: 17px; font-weight: 600; }
+    p, li { color: var(--text-soft); }
+    p { margin: 8px 0; }
+    ul { padding-left: 22px; margin: 8px 0; }
+    li { margin: 4px 0; }
+    strong { color: var(--text); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      background: var(--code-bg); color: var(--accent);
+      padding: 1px 6px; border-radius: 5px;
+      font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+      font-size: 13.5px;
+    }
+
+    .tldr {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin: 16px 0 0;
+    }
+    .tldr h2 { margin-top: 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+    th { background: var(--code-bg); color: var(--text); font-weight: 600; }
+    tr:last-child td { border-bottom: 0; }
+
+    footer {
+      max-width: 720px;
+      margin: 40px auto 0;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+      color: var(--text-mute);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="logo">S</div>
+      <div>
+        <h1>Privacy Policy</h1>
+        <p class="lead">AI Summarizer · Chrome extension · Last updated 2026-06-02</p>
+      </div>
+    </header>
+
+    <p>This document explains what data the <strong>AI Summarizer</strong> Chrome extension collects, how we use it, and your rights.</p>
+
+    <div class="tldr">
+      <h2>TL;DR</h2>
+      <ul>
+        <li>We don't sell your data.</li>
+        <li>No advertising. No third-party trackers.</li>
+        <li>API keys you paste stay in your browser. We never see them.</li>
+        <li>Content we send to AI providers (Gemini / OpenAI / Anthropic) is the text you asked us to summarise — and only that.</li>
+        <li>Optional account features store <strong>only</strong> your email and subscription state.</li>
+      </ul>
+    </div>
+
+    <h2>1. What the extension does</h2>
+    <p>When you click <strong>Summarize</strong> on a video, web page, or PDF, AI Summarizer:</p>
+    <ol>
+      <li>Reads the URL of the page you're currently viewing, or the file you uploaded.</li>
+      <li>Fetches the underlying content:
+        <ul>
+          <li>YouTube / Vimeo videos — the public caption track.</li>
+          <li>Web pages — the HTML rendered to plain text in your browser.</li>
+          <li>PDFs — the bytes of the file you chose.</li>
+        </ul>
+      </li>
+      <li>Sends that content with your prompt to the AI provider you selected (Gemini / OpenAI / Anthropic).</li>
+      <li>Displays the response.</li>
+    </ol>
+    <p>The entire pipeline runs in your browser. We don't have a server in the middle of this flow in the free version.</p>
+
+    <h2>2. What data we store</h2>
+
+    <h3>On your device (chrome.storage.local — never leaves your computer)</h3>
+    <ul>
+      <li>Your selected AI provider, model, language, length, and other preferences.</li>
+      <li>The API keys you pasted, if any. Stored locally only. We never see them.</li>
+      <li>Your last 50 summaries (local history). Editable, deletable.</li>
+      <li>Bridge-health diagnostics (success/failure of writing into your logged-in AI tab).</li>
+    </ul>
+
+    <h3>On your device (chrome.storage.session — cleared when you quit the browser)</h3>
+    <ul>
+      <li>For the Q&amp;A follow-up chat: the extracted source text plus a short message log of the page you just summarised. Cleared on browser close.</li>
+    </ul>
+
+    <h3>On our infrastructure (Supabase) — only if you sign in</h3>
+    <ul>
+      <li>Your email address.</li>
+      <li>Your subscription state mirrored from the billing provider (status, plan, renewal date).</li>
+      <li>Optional: synced summary history. You can delete this at any time from Settings → Account → Delete history.</li>
+    </ul>
+
+    <p>We do <strong>not</strong> store: your IP address (Supabase logs are kept under their infrastructure, subject to <a href="https://supabase.com/privacy" rel="noopener" target="_blank">Supabase's policy</a>); browsing history other than what you actively summarise; content of any page you didn't trigger a summary on.</p>
+
+    <h2>3. Third parties</h2>
+    <p>When you ask for a summary, page content goes directly from your browser to the AI provider you selected. We don't proxy it in the free version.</p>
+
+    <table>
+      <thead>
+        <tr><th>Provider</th><th>What we send</th><th>Their policy</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Google Gemini</td><td>Page content + your prompt</td><td><a href="https://policies.google.com/privacy" rel="noopener" target="_blank">link</a></td></tr>
+        <tr><td>OpenAI</td><td>Page content + your prompt</td><td><a href="https://openai.com/policies/privacy-policy" rel="noopener" target="_blank">link</a></td></tr>
+        <tr><td>Anthropic</td><td>Page content + your prompt</td><td><a href="https://www.anthropic.com/legal/privacy" rel="noopener" target="_blank">link</a></td></tr>
+        <tr><td>Supabase (optional)</td><td>Email + subscription state + history</td><td><a href="https://supabase.com/privacy" rel="noopener" target="_blank">link</a></td></tr>
+        <tr><td>Stripe / Paddle / Lemon Squeezy (optional)</td><td>Email + customer id</td><td>See respective sites</td></tr>
+      </tbody>
+    </table>
+
+    <p>If you use <strong>browser-session mode</strong> instead of an API key, the prompt is typed into your already-logged-in tab on <code>gemini.google.com</code> / <code>chatgpt.com</code> / <code>claude.ai</code>. In that case the prompt goes to the provider under your own account, exactly as if you had typed it manually.</p>
+
+    <h2>4. Permissions justification</h2>
+    <table>
+      <thead><tr><th>Permission</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><code>storage</code></td><td>Save preferences and API keys locally.</td></tr>
+        <tr><td><code>identity</code></td><td>Google SSO via <code>chrome.identity.launchWebAuthFlow</code> (only used in the Pro/sign-in flow).</td></tr>
+        <tr><td><code>tabs</code></td><td>Detect the URL of the active tab so the popup pre-fills.</td></tr>
+        <tr><td><code>activeTab</code></td><td>Read the current page's URL when you click the toolbar action.</td></tr>
+        <tr><td><code>scripting</code></td><td>Inject content scripts on supported pages to show the in-page button.</td></tr>
+        <tr><td><code>&lt;all_urls&gt;</code></td><td>Show the floating Summarize button on any article, video, or PDF you open. Page content is read <strong>only after</strong> you click Summarize.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5. Your rights</h2>
+    <ul>
+      <li><strong>Delete your account and all stored data</strong> — Settings → Account → Delete account. Cascades to subscriptions, usage, and history.</li>
+      <li><strong>Export your data</strong> as JSON from Settings → Account → Export.</li>
+      <li><strong>Cancel your subscription</strong> at any time via the billing portal. You retain Pro access until the end of the paid period.</li>
+      <li><strong>Revoke API keys</strong> in your provider's dashboard; we have no copy.</li>
+    </ul>
+
+    <p>For EU users: data is processed under GDPR Article 6(1)(b) — performance of a contract — for account/subscription data, and Article 6(1)(a) — consent — for optional history sync.</p>
+
+    <h2>6. Children</h2>
+    <p>The extension is not directed at children under 13. We do not knowingly collect personal information from children.</p>
+
+    <h2>7. Changes to this policy</h2>
+    <p>Material changes will be announced in the extension's release notes and updated here. The <em>Last updated</em> date at the top reflects the most recent revision.</p>
+
+    <h2>8. Contact</h2>
+    <p>Privacy questions, deletion requests, or data export: <a href="mailto:m.nazar77@gmail.com">m.nazar77@gmail.com</a></p>
+
+    <footer>
+      AI Summarizer is an independent project by m.nazar77. Not affiliated with Google, OpenAI, Anthropic, YouTube, Vimeo, or any AI-provider trademark holder.
+    </footer>
+  </main>
+</body>
+</html>

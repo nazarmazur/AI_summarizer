@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; width: 920px; height: 680px; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; }
+body {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #e0e7ff 100%);
+}
+.left {
+  padding: 60px 50px; display: flex; flex-direction: column; justify-content: center; gap: 18px;
+}
+.logo {
+  width: 64px; height: 64px; border-radius: 16px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 32px; letter-spacing: -.05em;
+}
+h1 { margin: 0; font-size: 50px; font-weight: 800; letter-spacing: -.025em; line-height: 1.05; color: #0f0f1f; }
+.accent { background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { margin: 4px 0 0; font-size: 18px; color: #4b5563; line-height: 1.45; max-width: 380px; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  background: rgba(255,255,255,.7); border: 1px solid rgba(99,102,241,.2);
+  font-size: 12.5px; font-weight: 600; color: #4338ca;
+}
+.right {
+  display: flex; align-items: center; justify-content: center; padding: 30px;
+}
+.popup {
+  width: 360px; background: #fff; border-radius: 18px; padding: 14px;
+  box-shadow: 0 30px 60px rgba(99,102,241,.25);
+  border: 1px solid #ececf2;
+  transform: rotate(2deg);
+}
+.popup .toolbar { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 24px; padding: 0 9px;
+  border: 1px solid #ececf2; border-radius: 999px; background:#fff;
+  font-size: 10.5px; font-weight: 500;
+}
+.chip.acc { color: #6366f1; }
+.model { display: flex; margin: 8px 0; }
+.url-row { display: flex; gap: 5px; margin: 8px 0 10px; }
+.url-input { flex:1; height: 32px; border: 1px solid #ececf2; border-radius: 999px; padding: 0 12px; font-size: 10.5px; display: inline-flex; align-items: center; color: #6b7280; }
+.send { width: 32px; height: 32px; border-radius: 50%; background: #2a2a35; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
+.tiles { display: flex; gap: 5px; margin-bottom: 10px; }
+.tile { display:inline-flex; align-items:center; gap: 5px; height: 28px; padding: 0 10px; border: 1px solid #ececf2; border-radius: 999px; background: #fff; font-size: 11px; font-weight: 500; }
+.tile.active { background: linear-gradient(135deg,#f5f3ff,#fce7f3); border-color: transparent; }
+.r-head { font-size: 9.5px; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.r-meta { font-size: 10px; color: #9ca3af; margin-bottom: 6px; }
+.r-body { font-size: 11px; line-height: 1.5; color: #1a1a1f; padding-left: 4px; }
+.r-body ul { margin: 0; padding-left: 16px; }
+.r-body strong { font-weight: 600; }
+.cursor { display: inline-block; width: 6px; background: #6366f1; color: transparent; margin-left: 2px; }
+.badge-new { background: linear-gradient(135deg,#a78bfa,#ec4899); color:#fff; padding: 1px 5px; border-radius: 999px; font-size: 8.5px; font-weight: 700; }
+</style></head>
+<body>
+  <div class="left">
+    <div class="logo">S</div>
+    <h1>Summary in seconds.<br/><span class="accent">Then ask anything.</span></h1>
+    <p class="lead">Videos, articles, PDFs — distilled to the essentials, plus a built-in Q&amp;A chat.</p>
+    <div class="tags">
+      <span class="tag">🎬 YouTube</span>
+      <span class="tag">📄 Articles</span>
+      <span class="tag">📕 PDFs</span>
+      <span class="tag">💬 Q&amp;A</span>
+      <span class="tag">🌍 8 mov</span>
+    </div>
+  </div>
+  <div class="right">
+    <div class="popup">
+      <div class="toolbar">
+        <div class="chips">
+          <span class="chip">🌐 Українська</span>
+          <span class="chip">📏 Коротка</span>
+        </div>
+        <div style="display:flex; gap: 3px; align-items: center;"><div style="width:24px;height:24px;border-radius:50%; background:#f3f0ff; display:inline-flex; align-items:center; justify-content:center; font-size:11px;">👤</div></div>
+      </div>
+      <div class="model"><span class="chip acc">⚡ Авто <span class="badge-new">New</span></span></div>
+      <div class="url-row"><div class="url-input">📺 youtube.com/watch?v=…</div><div class="send">→</div></div>
+      <div class="tiles">
+        <div class="tile active">Сводка ✨</div>
+        <div class="tile">Тайм-коди 🕐</div>
+      </div>
+      <div class="r-head">Підсумок</div>
+      <div class="r-meta">Lex Fridman · GEMINI</div>
+      <div class="r-body">
+        <ul>
+          <li><strong>AGI до 2030</strong> — реалістично</li>
+          <li><strong>AlphaFold</strong>: 200M білків</li>
+          <li>Reasoning models змінять економіку<span class="cursor">.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body></html>
