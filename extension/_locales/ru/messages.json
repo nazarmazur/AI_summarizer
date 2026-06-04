@@ -1,6 +1,6 @@
 {
-  "extName":            { "message": "AI Summarizer для YouTube" },
-  "extDescription":     { "message": "Быстрая сводка любого YouTube видео через Gemini, GPT или Claude — с вашим API-ключом или браузерной сессией." },
+  "extName":            { "message": "Smart AI Summarizer" },
+  "extDescription":     { "message": "Быстрая AI-сводка видео, статей и PDF-документов. Поддерживает популярные AI-модели. Чат с суммированным содержимым." },
   "openSummarizer":     { "message": "Открыть суммаризатор" },
 
   "tabSummary":         { "message": "Сводка" },

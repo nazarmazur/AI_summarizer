@@ -1,6 +1,6 @@
 {
-  "extName":            { "message": "AI Summarizer for YouTube" },
-  "extDescription":     { "message": "Fast summary of any YouTube video via Gemini, GPT or Claude — using your API key or browser session." },
+  "extName":            { "message": "Smart AI Summarizer" },
+  "extDescription":     { "message": "Fast AI summaries for videos, articles, and PDF documents. Works with popular AI models. Chat with the summarized content." },
   "openSummarizer":     { "message": "Open Summarizer" },
 
   "tabSummary":         { "message": "Summary" },
