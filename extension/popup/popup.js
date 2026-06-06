@@ -60,6 +60,8 @@ const fallbackBanner    = $('fallbackBanner');
 const loadingProgress   = $('loadingProgress');
 const loadingProgressBar = $('loadingProgressBar');
 const downloadBtn       = $('downloadBtn');
+const shareBtn          = $('shareBtn');
+const bookmarkBtn       = $('bookmarkBtn');
 const chatBox       = $('chat');
 const chatHistory   = $('chatHistory');
 const chatForm      = $('chatForm');
@@ -522,13 +524,51 @@ function renderProgress(kind) {
   resultBody.innerHTML = html;
 }
 
+// Renders timestamp lines like "MM:SS — description" as cards with a time pill
+// and the description text, mimicking the cleaner UX pattern competitors use.
+function renderTimestampCards(text, videoId) {
+  const lines = String(text || '').split('\n').map((l) => l.trim()).filter(Boolean);
+  const cards = [];
+  for (const line of lines) {
+    // Strip leading "- ", "• ", "* ", or digit-dot bullets
+    const cleaned = line.replace(/^[-•*]\s+|^\d+\.\s+/, '');
+    const m = cleaned.match(/^\[?(\d{1,2}:\d{2}(?::\d{2})?)\]?\s*[—\-:]\s*(.+)$/);
+    if (m) {
+      const ts = m[1];
+      const desc = m[2].trim();
+      const sec = ts.split(':').reduce((a, b) => a * 60 + parseInt(b, 10), 0);
+      const href = videoId ? `https://www.youtube.com/watch?v=${videoId}&t=${sec}s` : null;
+      cards.push({ ts, desc, href });
+    }
+  }
+  if (!cards.length) return null;   // fall back to markdown rendering
+
+  return cards.map((c) => `
+    <div class="ts-card">
+      ${c.href
+        ? `<a class="ts-pill" href="${c.href}" target="_blank" rel="noopener">${escHTML(c.ts)}</a>`
+        : `<span class="ts-pill">${escHTML(c.ts)}</span>`}
+      <div class="ts-text">${escHTML(c.desc)}</div>
+    </div>
+  `).join('');
+}
+
 function renderFinal(result, kind) {
   lastResult = result;
   resultHeader.textContent = t(kind === 'timestamps' ? 'timestampsHeader' : 'summaryHeader');
   const m = result.meta || {};
   const provider = result.provider ? result.provider.toUpperCase() : '';
   resultMeta.textContent = [m.title, provider && '· ' + provider, result.model && '· ' + result.model].filter(Boolean).join(' ');
-  resultBody.innerHTML = renderMarkdown(result.text, result.videoId);
+  // For timestamps mode, render as cards. For summary, use Markdown.
+  if (kind === 'timestamps') {
+    const cards = renderTimestampCards(result.text, result.videoId);
+    resultBody.innerHTML = cards || renderMarkdown(result.text, result.videoId);
+  } else {
+    resultBody.innerHTML = renderMarkdown(result.text, result.videoId);
+  }
+
+  // Reflect bookmark state on the icon
+  isBookmarked(result).then((on) => bookmarkBtn.classList.toggle('is-on', on));
 
   // Activate Q&A chat
   currentSourceKey = result.videoId ? ('vid:' + result.videoId)
@@ -919,6 +959,74 @@ downloadBtn.addEventListener('click', () => {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+// Share — uses Web Share API when available (mobile-style sheet), otherwise
+// falls back to copying a shareable text block to the clipboard.
+shareBtn.addEventListener('click', async () => {
+  if (!lastResult) return;
+  const title = (lastResult.meta && lastResult.meta.title) || 'AI Summary';
+  const url = lastResult.url || (lastResult.videoId ? 'https://www.youtube.com/watch?v=' + lastResult.videoId : '');
+  const text = buildMarkdownExport(lastResult, lastJob && lastJob.kind);
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url });
+      return;
+    } catch (_) { /* user canceled */ }
+  }
+  try {
+    await navigator.clipboard.writeText(text + (url ? '\n\n' + url : ''));
+    flashTitle(shareBtn, t('btnCopied'));
+  } catch (_) {}
+});
+
+function flashTitle(btn, text) {
+  const old = btn.getAttribute('title');
+  btn.setAttribute('title', text);
+  setTimeout(() => btn.setAttribute('title', old || ''), 1500);
+}
+
+// Bookmark — store result in chrome.storage.local. Toggle on second click.
+const BOOKMARK_KEY = 'ais_bookmarks';
+async function isBookmarked(result) {
+  if (!result) return false;
+  const { [BOOKMARK_KEY]: list } = await chrome.storage.local.get(BOOKMARK_KEY);
+  if (!Array.isArray(list)) return false;
+  const id = bookmarkId(result);
+  return list.some((b) => b.id === id);
+}
+function bookmarkId(result) {
+  return result.videoId ? 'v:' + result.videoId : 'u:' + (result.url || JSON.stringify(result.meta || {}));
+}
+async function toggleBookmark(result) {
+  const { [BOOKMARK_KEY]: prev } = await chrome.storage.local.get(BOOKMARK_KEY);
+  const list = Array.isArray(prev) ? prev.slice() : [];
+  const id = bookmarkId(result);
+  const idx = list.findIndex((b) => b.id === id);
+  if (idx >= 0) {
+    list.splice(idx, 1);
+    await chrome.storage.local.set({ [BOOKMARK_KEY]: list });
+    return false;
+  } else {
+    list.unshift({
+      id,
+      title:    (result.meta && result.meta.title) || '',
+      videoId:  result.videoId || null,
+      url:      result.url || null,
+      kind:     lastJob && lastJob.kind,
+      text:     result.text,
+      created_at: new Date().toISOString(),
+    });
+    while (list.length > 100) list.pop();   // cap at 100
+    await chrome.storage.local.set({ [BOOKMARK_KEY]: list });
+    return true;
+  }
+}
+bookmarkBtn.addEventListener('click', async () => {
+  if (!lastResult) return;
+  const added = await toggleBookmark(lastResult);
+  bookmarkBtn.classList.toggle('is-on', added);
+  flashTitle(bookmarkBtn, added ? t('bookmarkAdded') : t('bookmarkRemoved'));
 });
 
 accountBtn.addEventListener('click', async () => {

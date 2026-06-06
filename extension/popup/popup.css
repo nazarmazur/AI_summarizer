@@ -301,6 +301,8 @@ body.dark .src-chip { background: #2a2538; }
   transition: background-color .12s, color .12s;
 }
 .icon-mini:hover { background: #f3f0ff; color: var(--accent); }
+.icon-mini.is-on { color: var(--accent); }
+.icon-mini.is-on:hover { color: var(--accent-2); }
 
 .result-meta {
   font-size: 11.5px;
@@ -324,8 +326,40 @@ body.dark .src-chip { background: #2a2538; }
 .markdown h2 { font-size: 14px; }
 .markdown h3 { font-size: 13px; }
 .markdown p  { margin: 6px 0; }
-.markdown ul, .markdown ol { margin: 6px 0; padding-left: 20px; }
-.markdown li { margin: 3px 0; }
+.markdown ul, .markdown ol { margin: 6px 0; padding-left: 0; list-style: none; }
+.markdown li {
+  margin: 6px 0;
+  padding: 8px 12px 8px 14px;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  line-height: 1.5;
+}
+.markdown li::before {
+  content: '';
+  position: absolute;
+  left: 5px; top: 14px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.markdown li strong { display: inline; color: var(--text); font-weight: 600; }
+.markdown ol { counter-reset: ol; }
+.markdown ol li::before {
+  counter-increment: ol;
+  content: counter(ol) '.';
+  background: none;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+  width: auto; height: auto;
+  border-radius: 0;
+  top: 8px;
+}
+.markdown ol li { padding-left: 22px; }
+
+body.dark .markdown li { background: #1f1f1f; border-color: #2a2a2a; }
 .markdown strong { color: var(--text); font-weight: 600; }
 .markdown code {
   background: #f3f0ff;
@@ -343,6 +377,50 @@ body.dark .src-chip { background: #2a2538; }
   font-family: 'JetBrains Mono', Consolas, monospace;
 }
 .markdown .ts:hover { text-decoration: underline; }
+
+/* Timestamp cards — used when result.kind === 'timestamps' */
+.ts-card {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px;
+  align-items: start;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color .12s, background-color .12s;
+}
+.ts-card:hover { border-color: #d8d4f0; background: #fafaff; }
+
+.ts-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 10px;
+  background: #e0e7ff;
+  color: #4338ca;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color .12s, color .12s;
+}
+.ts-pill:hover { background: #c7d2fe; color: #3730a3; }
+
+.ts-text {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  padding-top: 4px;
+}
+
+body.dark .ts-card { background: #1f1f1f; border-color: #2a2a2a; }
+body.dark .ts-card:hover { background: #2a2a35; border-color: #3a3a45; }
+body.dark .ts-pill { background: #2a2538; color: #a78bfa; }
+body.dark .ts-pill:hover { background: #3a3548; color: #c4b5fd; }
 
 /* ============================================================ chat */
 

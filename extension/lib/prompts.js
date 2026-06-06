@@ -17,9 +17,9 @@ const LANG_NAME = {
 };
 
 const LENGTH_DESCR = {
-  short:  '4-6 concise bullet points (no preamble). Target ~120 words total.',
-  medium: 'A structured summary: 1 short intro paragraph + 6-10 bullet points covering main ideas. ~300 words.',
-  long:   'A detailed structured summary: brief intro, sectioned with bold-headed subtopics, then key takeaways. ~600 words.',
+  short:  '4-6 bullet points. Each starts with a **bold** title phrase (3-7 words), then a one-sentence explanation. Target ~120 words total. No preamble.',
+  medium: 'Optional 1-line intro, then 6-10 bullet points. Each starts with a **bold** title phrase (3-7 words), then a 1-2 sentence explanation. ~300 words.',
+  long:   'Short intro paragraph, then sections with ## headings. Under each section, bullet points starting with a **bold** title phrase and 1-3 sentences of detail. End with "## Key takeaways" section. ~600 words.',
 };
 
 function langName(code) {
