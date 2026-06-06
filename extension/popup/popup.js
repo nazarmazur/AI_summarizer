@@ -7,6 +7,11 @@ import { getAllTemplates } from '../lib/templates.js';
 
 const t = (k) => chrome.i18n.getMessage(k) || k;
 
+function escHTML(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 // --------------------------------------------------------------------- DOM
 const $ = (id) => document.getElementById(id);
 
@@ -174,9 +179,11 @@ function buildModelMenu() {
 
   // Auto entry first
   const autoBtn = document.createElement('button');
-  autoBtn.className = 'menu-item' + (settings.model === 'auto' ? ' is-selected' : '');
+  autoBtn.className = 'menu-item menu-item-rich' + (settings.model === 'auto' ? ' is-selected' : '');
   autoBtn.dataset.value = 'auto';
-  autoBtn.textContent = chrome.i18n.getMessage('modelAuto') || 'Auto';
+  autoBtn.innerHTML = `
+    <span class="mi-title">${escHTML(chrome.i18n.getMessage('modelAuto') || 'Auto')}</span>
+    <span class="mi-sub">${escHTML(chrome.i18n.getMessage('modelAutoDesc') || 'Auto-pick the best available model based on your API keys')}</span>`;
   modelMenu.appendChild(autoBtn);
 
   for (const prov of ['gemini', 'openai', 'anthropic']) {
@@ -186,10 +193,12 @@ function buildModelMenu() {
     modelMenu.appendChild(hdr);
     for (const m of groups[prov]) {
       const b = document.createElement('button');
-      b.className = 'menu-item' + (settings.model === m.key ? ' is-selected' : '');
+      b.className = 'menu-item menu-item-rich' + (settings.model === m.key ? ' is-selected' : '');
       b.dataset.value = m.key;
       if (m.group === 'pro') b.dataset.pro = '1';
-      b.textContent = m.label;
+      b.innerHTML = `
+        <span class="mi-title">${escHTML(m.label)}${m.group === 'pro' ? '<span class="mi-pro">PRO</span>' : ''}</span>
+        <span class="mi-sub">${escHTML(m.description || '')}</span>`;
       modelMenu.appendChild(b);
     }
   }
@@ -396,10 +405,7 @@ async function prefillFromActiveTab() {
 
 // --------------------------------------------------------------------- markdown
 
-function escHTML(s) {
-  return String(s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+// (escHTML is also declared at the top of the file)
 
 // Tiny Markdown renderer — handles headings, bold, italic, lists, links, code,
 // and timestamp links of the form "MM:SS" or "H:MM:SS" at line start.

@@ -28,6 +28,10 @@
   "lengthShort":        { "message": "Коротка" },
   "lengthMedium":       { "message": "Середня" },
   "lengthLong":         { "message": "Детальна" },
+  "lengthShortDesc":    { "message": "Тільки основні пункти" },
+  "lengthMediumDesc":   { "message": "Ключові моменти з контекстом" },
+  "lengthLongDesc":     { "message": "Повний хронологічний розбір" },
+  "modelAutoDesc":      { "message": "Найкраща доступна модель за вашими ключами" },
 
   "modelAuto":          { "message": "Авто" },
   "modelGemini":        { "message": "Gemini" },

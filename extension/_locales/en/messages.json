@@ -28,6 +28,10 @@
   "lengthShort":        { "message": "Short" },
   "lengthMedium":       { "message": "Medium" },
   "lengthLong":         { "message": "Detailed" },
+  "lengthShortDesc":    { "message": "Just the main points" },
+  "lengthMediumDesc":   { "message": "Key moments with context" },
+  "lengthLongDesc":     { "message": "Full chronological breakdown" },
+  "modelAutoDesc":      { "message": "Best available model for your keys" },
 
   "modelAuto":          { "message": "Auto" },
   "modelGemini":        { "message": "Gemini" },

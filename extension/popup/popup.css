@@ -763,7 +763,52 @@ body.dark .modal-icon { background: #2a2538; }
   text-transform: uppercase;
   color: var(--text-mute);
 }
-.menu-grouped { max-height: 340px; overflow-y: auto; }
+.menu-grouped { max-height: 380px; overflow-y: auto; }
+
+/* Two-line menu item — bold title + sub description below */
+.menu-item-rich {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  width: 100%;
+  text-align: left;
+}
+.menu-item-rich .mi-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.25;
+}
+.menu-item-rich.is-selected .mi-title { color: var(--accent); }
+.menu-item-rich .mi-sub {
+  font-size: 11.5px;
+  color: var(--text-mute);
+  font-weight: 400;
+  line-height: 1.35;
+}
+.menu-item-rich:hover .mi-title { color: var(--accent); }
+.menu-item-rich:hover .mi-sub   { color: var(--text-soft); }
+
+.mi-pro {
+  display: inline-flex;
+  align-items: center;
+  height: 14px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+body.dark .menu-item-rich .mi-sub { color: var(--text-mute); }
+body.dark .menu-item-rich:hover .mi-title { color: #a78bfa; }
 
 body.dark .menu-search { background: #1f1f1f; border-color: #2a2a2a; color: var(--text); }
 

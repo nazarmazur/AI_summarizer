@@ -173,9 +173,18 @@
   <!-- ===================== Dropdown menus ===================== -->
   <div class="menu" id="langMenu" hidden></div>
   <div class="menu" id="lengthMenu" hidden>
-    <button class="menu-item" data-value="short"  data-i18n="lengthShort"></button>
-    <button class="menu-item" data-value="medium" data-i18n="lengthMedium"></button>
-    <button class="menu-item" data-value="long"   data-i18n="lengthLong"></button>
+    <button class="menu-item menu-item-rich" data-value="short">
+      <span class="mi-title" data-i18n="lengthShort">Коротка</span>
+      <span class="mi-sub" data-i18n="lengthShortDesc">Тільки основні пункти</span>
+    </button>
+    <button class="menu-item menu-item-rich" data-value="medium">
+      <span class="mi-title" data-i18n="lengthMedium">Середня</span>
+      <span class="mi-sub" data-i18n="lengthMediumDesc">Ключові моменти з контекстом</span>
+    </button>
+    <button class="menu-item menu-item-rich" data-value="long">
+      <span class="mi-title" data-i18n="lengthLong">Детальна</span>
+      <span class="mi-sub" data-i18n="lengthLongDesc">Повний хронологічний розбір</span>
+    </button>
   </div>
   <div class="menu" id="templateMenu" hidden></div>
   <!-- Model menu is built dynamically from MODELS in lib/config.js -->

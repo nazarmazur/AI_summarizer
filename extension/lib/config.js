@@ -45,33 +45,34 @@ export function getOAuthRedirect() {
   return chrome.identity.getRedirectURL('supabase-auth');
 }
 
-// Each entry: { provider, model, label, group ('free'|'pro'|'reasoning'), order }
+// Each entry: { provider, model, label, description, group ('free'|'pro'), order }
 // `provider` must match the streamer in lib/ai-api.js
 // `model` is the API model identifier — must be a real model id on the provider's API
+// `description` is shown under the model name in the picker
 export const MODELS = {
   // ─── Google Gemini ───────────────────────────────────────────────────
-  gemini:        { provider: 'gemini',    model: 'gemini-2.0-flash',           label: 'Gemini 2.0 Flash',           group: 'free', order: 10 },
-  gemini25Flash: { provider: 'gemini',    model: 'gemini-2.5-flash',           label: 'Gemini 2.5 Flash',           group: 'free', order: 11 },
-  gemini15Flash: { provider: 'gemini',    model: 'gemini-1.5-flash',           label: 'Gemini 1.5 Flash',           group: 'free', order: 12 },
-  geminiPro:     { provider: 'gemini',    model: 'gemini-2.5-pro',             label: 'Gemini 2.5 Pro',             group: 'pro',  order: 13 },
-  gemini15Pro:   { provider: 'gemini',    model: 'gemini-1.5-pro',             label: 'Gemini 1.5 Pro',             group: 'pro',  order: 14 },
+  gemini:        { provider: 'gemini',    model: 'gemini-2.0-flash',           label: 'Gemini 2.0 Flash',           description: 'Fast & free. Great for daily summaries.',          group: 'free', order: 10 },
+  gemini25Flash: { provider: 'gemini',    model: 'gemini-2.5-flash',           label: 'Gemini 2.5 Flash',           description: 'Newer Flash. Smarter, still fast.',                group: 'free', order: 11 },
+  gemini15Flash: { provider: 'gemini',    model: 'gemini-1.5-flash',           label: 'Gemini 1.5 Flash',           description: 'Stable. 1M-token context for very long content.',  group: 'free', order: 12 },
+  geminiPro:     { provider: 'gemini',    model: 'gemini-2.5-pro',             label: 'Gemini 2.5 Pro',             description: 'Best Google model for deep reasoning.',            group: 'pro',  order: 13 },
+  gemini15Pro:   { provider: 'gemini',    model: 'gemini-1.5-pro',             label: 'Gemini 1.5 Pro',             description: 'Pro tier with 2M-token context window.',           group: 'pro',  order: 14 },
 
   // ─── OpenAI ──────────────────────────────────────────────────────────
-  gpt:           { provider: 'openai',    model: 'gpt-4o-mini',                label: 'GPT-4o mini',                group: 'free', order: 20 },
-  gpt35:         { provider: 'openai',    model: 'gpt-3.5-turbo',              label: 'GPT-3.5 Turbo',              group: 'free', order: 21 },
-  gptPro:        { provider: 'openai',    model: 'gpt-4o',                     label: 'GPT-4o',                     group: 'pro',  order: 22 },
-  gpt4Turbo:     { provider: 'openai',    model: 'gpt-4-turbo',                label: 'GPT-4 Turbo',                group: 'pro',  order: 23 },
-  gpt41:         { provider: 'openai',    model: 'gpt-4.1',                    label: 'GPT-4.1',                    group: 'pro',  order: 24 },
-  o3Mini:        { provider: 'openai',    model: 'o3-mini',                    label: 'OpenAI o3-mini (reasoning)', group: 'pro',  order: 25 },
-  o1:            { provider: 'openai',    model: 'o1',                         label: 'OpenAI o1 (reasoning)',      group: 'pro',  order: 26 },
+  gpt:           { provider: 'openai',    model: 'gpt-4o-mini',                label: 'GPT-4o mini',                description: 'Affordable OpenAI for everyday tasks.',            group: 'free', order: 20 },
+  gpt35:         { provider: 'openai',    model: 'gpt-3.5-turbo',              label: 'GPT-3.5 Turbo',              description: 'Classic OpenAI. Cheap and very fast.',             group: 'free', order: 21 },
+  gptPro:        { provider: 'openai',    model: 'gpt-4o',                     label: 'GPT-4o',                     description: 'OpenAI flagship for nuanced summaries.',           group: 'pro',  order: 22 },
+  gpt4Turbo:     { provider: 'openai',    model: 'gpt-4-turbo',                label: 'GPT-4 Turbo',                description: 'Powerful with 128K context window.',               group: 'pro',  order: 23 },
+  gpt41:         { provider: 'openai',    model: 'gpt-4.1',                    label: 'GPT-4.1',                    description: 'Newest OpenAI flagship. Best for detailed work.',  group: 'pro',  order: 24 },
+  o3Mini:        { provider: 'openai',    model: 'o3-mini',                    label: 'OpenAI o3-mini',             description: 'Reasoning model. Slower, smarter on logic.',       group: 'pro',  order: 25 },
+  o1:            { provider: 'openai',    model: 'o1',                         label: 'OpenAI o1',                  description: 'OpenAI\'s deepest reasoning model.',               group: 'pro',  order: 26 },
 
   // ─── Anthropic Claude ───────────────────────────────────────────────
-  claude:        { provider: 'anthropic', model: 'claude-haiku-4-5',           label: 'Claude Haiku 4.5',           group: 'free', order: 30 },
-  claude35Haiku: { provider: 'anthropic', model: 'claude-3-5-haiku-latest',    label: 'Claude 3.5 Haiku',           group: 'free', order: 31 },
-  claudePro:     { provider: 'anthropic', model: 'claude-sonnet-4-6',          label: 'Claude Sonnet 4.6',          group: 'pro',  order: 32 },
-  claude35Sonnet:{ provider: 'anthropic', model: 'claude-3-5-sonnet-latest',   label: 'Claude 3.5 Sonnet',          group: 'pro',  order: 33 },
-  claudeOpus:    { provider: 'anthropic', model: 'claude-opus-4-6',            label: 'Claude Opus 4.6',            group: 'pro',  order: 34 },
-  claude3Opus:   { provider: 'anthropic', model: 'claude-3-opus-latest',       label: 'Claude 3 Opus',              group: 'pro',  order: 35 },
+  claude:        { provider: 'anthropic', model: 'claude-haiku-4-5',           label: 'Claude Haiku 4.5',           description: 'Fast & affordable. Excellent for summaries.',      group: 'free', order: 30 },
+  claude35Haiku: { provider: 'anthropic', model: 'claude-3-5-haiku-latest',    label: 'Claude 3.5 Haiku',           description: 'Reliable older Haiku.',                            group: 'free', order: 31 },
+  claudePro:     { provider: 'anthropic', model: 'claude-sonnet-4-6',          label: 'Claude Sonnet 4.6',          description: 'Best balance of depth and speed.',                 group: 'pro',  order: 32 },
+  claude35Sonnet:{ provider: 'anthropic', model: 'claude-3-5-sonnet-latest',   label: 'Claude 3.5 Sonnet',          description: 'Trusted Sonnet. Great for nuanced writing.',       group: 'pro',  order: 33 },
+  claudeOpus:    { provider: 'anthropic', model: 'claude-opus-4-6',            label: 'Claude Opus 4.6',            description: 'Anthropic\'s most powerful model.',                group: 'pro',  order: 34 },
+  claude3Opus:   { provider: 'anthropic', model: 'claude-3-opus-latest',       label: 'Claude 3 Opus',              description: 'Original Opus. Deep, careful analysis.',           group: 'pro',  order: 35 },
 };
 
 // Helper: get models grouped by provider for menu rendering.
