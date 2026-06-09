@@ -127,9 +127,15 @@
 4. **Обрати billing provider:** Paddle / Lemon Squeezy / Stripe (через Atlas)
 5. Deploy відповідних Edge Functions (див. README)
 6. Deploy `ai-proxy` Edge Function з нашими pool ключами
-7. Змінити `RELEASE_MODE = 'full'` у config.js
-8. Bump version → 1.1.0
-9. Submit оновлення
+7. **Повернути `auth/auth.html`** у `web_accessible_resources` у manifest.json (видалено у v1.0.8 щоб reviewer не натикався на неробочий Sign Up)
+8. У `extension/onboarding/onboarding.js` прибрати рядки `poolBox.hidden = true`, `onbGoogle.disabled = true`, `onbEmail.hidden = true` (defensive guards для free mode)
+9. Змінити `RELEASE_MODE = 'full'` у config.js
+10. **Активувати forced login для всіх** — модальне вікно «Sign in to continue» блокує користувача поки не залогіниться через Google SSO або email. Код у `auth/auth.html` готовий. У `popup.js` додати `if (!session) { showAuthGate(); return; }` на старті init(). Текст: «Ask questions about videos, customize language and AI model, save summaries, track usage, and more — sign in to continue.»
+11. Оновити CWS listing description — додати Pro фічі
+12. Bump version → 1.1.0
+13. Submit оновлення
+
+> **Важливо для CWS:** при поверненні forced login переконатись що Supabase реально працює (URL + ANON налаштовані, проект створено, RLS активна). Інакше Red Potassium rejection повториться.
 
 Існуючі користувачі v1.0.0 побачать у Settings новий розділ «Sign in to sync» — підписатись необов'язково, BYOK продовжує працювати.
 
