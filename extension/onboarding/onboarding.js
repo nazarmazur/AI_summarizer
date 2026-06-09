@@ -6,6 +6,13 @@ import { RELEASE_MODE, HAS_SUPABASE, HAS_PRO } from '../lib/config.js';
 // ai-proxy Edge Function. Users pick API key or browser session only.
 if (!HAS_PRO || !HAS_SUPABASE) {
   document.querySelectorAll('.choice[data-source="pool"]').forEach((el) => { el.hidden = true; });
+  // Defensively hide the pool sign-in box too — no sign-up exists in v1 free build.
+  const poolBox = document.getElementById('poolSignInBox');
+  if (poolBox) poolBox.hidden = true;
+  const onbGoogle = document.getElementById('onbGoogleBtn');
+  if (onbGoogle) onbGoogle.disabled = true;
+  const onbEmail = document.getElementById('onbEmailBtn');
+  if (onbEmail) onbEmail.hidden = true;
 }
 
 const t = (k) => chrome.i18n.getMessage(k) || k;

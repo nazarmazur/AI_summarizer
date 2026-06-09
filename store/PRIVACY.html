@@ -135,7 +135,44 @@
     </ol>
     <p>The entire pipeline runs in your browser. We don't have a server in the middle of this flow in the free version.</p>
 
-    <h2>2. What data we store</h2>
+    <h2>2. Data we collect, process, store, and transmit</h2>
+
+    <h3>2.1 What we collect</h3>
+    <p>The extension collects the following categories of data <strong>only when explicitly triggered by you</strong> (clicking "Summarize" or similar):</p>
+    <ul>
+      <li><strong>Website content</strong> — the text of the page, video transcript, or PDF you choose to summarize. Used immediately to generate the summary, then discarded by us.</li>
+      <li><strong>API keys</strong> you paste into the settings — stored locally on your device only.</li>
+      <li><strong>User preferences</strong> — your selected language, model, summary length, and theme.</li>
+    </ul>
+    <p>We <strong>do not</strong> collect: name, email (in v1.0.x free build), IP address, geolocation, browsing history beyond pages you summarize, personal communications, financial information, or any data for advertising purposes.</p>
+
+    <h3>2.2 How we process the data</h3>
+    <p>Processing happens in two places:</p>
+    <ul>
+      <li><strong>In your browser</strong> — the extension fetches the page content, parses it locally (Readability-style HTML extraction or transcript parsing), and prepares the prompt.</li>
+      <li><strong>At the AI provider you selected</strong> (Google Gemini, OpenAI, or Anthropic) — the prepared prompt + content is sent to their API to generate the summary. Their processing is subject to their own privacy policy (linked in section 3).</li>
+    </ul>
+    <p>We, the extension developer, <strong>do not</strong> have a server in this pipeline. We never see your content or your API keys.</p>
+
+    <h3>2.3 How we store the data</h3>
+    <ul>
+      <li><strong>chrome.storage.local</strong> — settings, API keys, and last 50 summary records are stored locally on your device. This data never syncs to any server. You can clear it any time via <code>chrome://extensions/</code> → details → "Site data".</li>
+      <li><strong>chrome.storage.session</strong> — for the Q&amp;A chat, the extracted source text + recent messages stay in session memory. Cleared the moment you close the browser.</li>
+      <li><strong>Retention period</strong> — local history is capped at 50 entries (oldest dropped automatically). Session chat data is wiped on browser close. You can wipe everything at any time from the History page.</li>
+    </ul>
+
+    <h3>2.4 How we transmit the data</h3>
+    <ul>
+      <li>Content you choose to summarize is transmitted <strong>directly from your browser</strong> to the AI provider's API endpoint (e.g. <code>generativelanguage.googleapis.com</code>, <code>api.openai.com</code>, <code>api.anthropic.com</code>) over HTTPS.</li>
+      <li>We do <strong>not</strong> intercept, log, or proxy this traffic.</li>
+      <li>We do <strong>not</strong> transmit data to our own servers — there are none in this version.</li>
+      <li>We do <strong>not</strong> share data with third parties beyond the AI provider you explicitly chose.</li>
+    </ul>
+
+    <h3>2.5 Account features (disabled in v1.0.x free build)</h3>
+    <p>This version of the extension does <strong>not</strong> require, offer, or expose any sign-in or account creation. There is no Pro tier active. The codebase contains optional account scaffolding for future versions, but it is not reachable through the user interface in this build.</p>
+
+    <h2>3. Legacy storage details</h2>
 
     <h3>On your device (chrome.storage.local — never leaves your computer)</h3>
     <ul>
