@@ -78,10 +78,7 @@ $('onbGoogleBtn')?.addEventListener('click', async () => {
     alert(e.message || 'OAuth failed');
   }
 });
-$('onbEmailBtn')?.addEventListener('click', () => {
-  const returnTo = location.href;
-  location.href = chrome.runtime.getURL('auth/auth.html?returnTo=' + encodeURIComponent(returnTo));
-});
+// Email/SSO entry was removed in v1.0.x free build — no sign-in flow exists.
 
 async function persistStep2() {
   if (!chosenSource) {

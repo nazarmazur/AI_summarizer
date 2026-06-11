@@ -663,12 +663,6 @@ function safePost(port, msg) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || !msg.type) return;
 
-  if (msg.type === 'AIS_OPEN_AUTH') {
-    chrome.tabs.create({ url: chrome.runtime.getURL('auth/auth.html') });
-    sendResponse({ ok: true });
-    return false;
-  }
-
   if (msg.type === 'AIS_OPEN_OPTIONS') {
     chrome.runtime.openOptionsPage();
     sendResponse({ ok: true });

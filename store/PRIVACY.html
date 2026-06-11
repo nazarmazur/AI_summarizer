@@ -237,8 +237,42 @@
 
     <p>For EU users: data is processed under GDPR Article 6(1)(b) — performance of a contract — for account/subscription data, and Article 6(1)(a) — consent — for optional history sync.</p>
 
-    <h2>6. Children</h2>
-    <p>The extension is not directed at children under 13. We do not knowingly collect personal information from children.</p>
+    <h2>6. Cookies and tracking technologies</h2>
+    <p>The extension does <strong>not</strong> set, read, or use cookies of any kind. It does <strong>not</strong> use:</p>
+    <ul>
+      <li>HTTP cookies</li>
+      <li>Local storage cookies</li>
+      <li>Tracking pixels or web beacons</li>
+      <li>Fingerprinting techniques</li>
+      <li>Cross-site tracking identifiers</li>
+    </ul>
+    <p>The only browser-storage APIs used are <code>chrome.storage.local</code> (preferences, history) and <code>chrome.storage.session</code> (transient chat state). Both are scoped to the extension and not accessible to any website.</p>
+
+    <h2>7. Analytics and advertising</h2>
+    <p>The extension contains <strong>zero analytics</strong>. No Google Analytics, no Mixpanel, no Amplitude, no Hotjar, no Segment, no custom telemetry. We do not measure clicks, impressions, sessions, or any behavioral metric. There is no remote logging endpoint.</p>
+    <p>The extension contains <strong>zero advertising</strong>. No ad networks, no sponsored content, no affiliate tracking, no retargeting tags.</p>
+
+    <h2>8. Children's privacy (COPPA)</h2>
+    <p>The extension is not directed at children under 13 years of age, and we do not knowingly collect personal information from children. If a parent or guardian believes that a child has provided us with information, please contact <a href="mailto:m.nazar77@gmail.com">m.nazar77@gmail.com</a> and we will promptly take steps to delete such information from our systems (although, as documented above, no personal data is collected in this version).</p>
+
+    <h2>9. Data categories — full disclosure table</h2>
+    <table>
+      <thead><tr><th>Category</th><th>Collected?</th><th>How</th><th>Stored where</th><th>Retention</th></tr></thead>
+      <tbody>
+        <tr><td>Personally identifiable info (name, email, phone)</td><td><strong>No</strong></td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>Authentication data (passwords, credentials)</td><td><strong>No</strong></td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>Financial and payment data</td><td><strong>No</strong></td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>Health and medical information</td><td><strong>No</strong></td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>Personal communications (emails, SMS, chats)</td><td><strong>No</strong></td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>Geolocation</td><td><strong>No</strong></td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>Web browsing history</td><td><strong>No</strong></td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>User activity (clicks, mouse, keystrokes)</td><td><strong>No</strong></td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td>Website content (pages user chooses to summarize)</td><td>Yes, per explicit user action</td><td>Content script extracts text via DOMParser</td><td>Transmitted to user-selected AI provider; not stored by us</td><td>Not retained — only kept in chrome.storage.session for the duration of the summary chat</td></tr>
+        <tr><td>User preferences (language, model, theme)</td><td>Yes</td><td>User enters in settings</td><td>chrome.storage.local on user's device</td><td>Until user removes the extension or resets settings</td></tr>
+        <tr><td>API keys (provided by user)</td><td>Yes</td><td>User pastes in settings</td><td>chrome.storage.local on user's device</td><td>Until user removes the extension or clears the key</td></tr>
+        <tr><td>Summary history</td><td>Yes</td><td>Saved after each summary</td><td>chrome.storage.local on user's device, last 50 entries</td><td>Last 50 entries kept (oldest dropped automatically); user can wipe at any time</td></tr>
+      </tbody>
+    </table>
 
     <h2>7. Changes to this policy</h2>
     <p>Material changes will be announced in the extension's release notes and updated here. The <em>Last updated</em> date at the top reflects the most recent revision.</p>

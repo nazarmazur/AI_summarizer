@@ -34,7 +34,6 @@ const srcRow       = $('srcRow');
 const srcIcon      = $('srcIcon');
 const srcLabel     = $('srcLabel');
 
-const accountBtn   = $('accountBtn');
 const settingsBtn  = $('settingsBtn');
 const historyBtn   = $('historyBtn');
 
@@ -279,7 +278,6 @@ function applyTierToUI() {
   if (!HAS_PRO) {
     document.querySelectorAll('.tile[data-pro-feature] .lock-badge').forEach((b) => { b.hidden = true; });
     document.querySelectorAll('.menu-item[data-pro]').forEach((b) => { b.removeAttribute('data-pro'); });
-    if (accountBtn) accountBtn.hidden = !HAS_SUPABASE;
     return;
   }
   const isFree = currentTier !== 'pro';
@@ -696,17 +694,7 @@ async function run(kind) {
     showError(t('errorGeneric') + ' (URL?)');
     return;
   }
-  // Sign-in is only required in the 'full' release mode (when Supabase + Pro
-  // infra is wired up). In 'free' mode the extension is purely BYOK.
-  if (RELEASE_MODE === 'full' && HAS_SUPABASE) {
-    const session = await getSession();
-    if (!session) {
-      showError(t('errorAuth'), { label: t('authSignIn'), handler: () => {
-        chrome.runtime.sendMessage({ type: 'AIS_OPEN_AUTH' });
-      }});
-      return;
-    }
-  }
+  // v1.0.x free build: no sign-in flow exists. BYOK only.
 
   cancelActiveStream();
   streamedText = '';
@@ -1029,14 +1017,6 @@ bookmarkBtn.addEventListener('click', async () => {
   flashTitle(bookmarkBtn, added ? t('bookmarkAdded') : t('bookmarkRemoved'));
 });
 
-accountBtn.addEventListener('click', async () => {
-  const s = await getSession();
-  if (!s) {
-    chrome.runtime.sendMessage({ type: 'AIS_OPEN_AUTH' });
-  } else {
-    chrome.runtime.sendMessage({ type: 'AIS_OPEN_OPTIONS' });
-  }
-});
 settingsBtn.addEventListener('click', () => {
   chrome.runtime.sendMessage({ type: 'AIS_OPEN_OPTIONS' });
 });
@@ -1120,15 +1100,10 @@ async function init() {
   updateChips();
   await prefillFromActiveTab();
 
-  const session = (RELEASE_MODE === 'full' && HAS_SUPABASE) ? await getSession() : null;
-  accountBtn.classList.toggle('unauthed', !session);
   // Hide the history button in free mode if there's literally no history yet —
   // it's still functional (local store), so we keep it visible by default.
 
-  if (HAS_PRO && session) {
-    const tier = await getTierStatus();
-    currentTier = tier.tier || 'free';
-  } else if (!HAS_PRO) {
+  if (!HAS_PRO) {
     currentTier = 'pro';   // unlock everything in free release
   }
   applyTierToUI();

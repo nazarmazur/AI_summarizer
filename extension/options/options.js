@@ -81,14 +81,9 @@ async function saveAll() {
 
 saveBtn.addEventListener('click', saveAll);
 
-signInBtn.addEventListener('click', () => {
-  chrome.tabs.create({ url: chrome.runtime.getURL('auth/auth.html?returnTo=' + encodeURIComponent(location.href)) });
-});
-
-signOutBtn.addEventListener('click', async () => {
-  await signOut();
-  loadAll();
-});
+// Sign-in entry was removed in v1.0.x free build — no auth flow exists.
+signInBtn?.addEventListener('click', () => { /* no-op */ });
+signOutBtn?.addEventListener('click', async () => { await signOut(); loadAll(); });
 
 // --------------------------------------------------------------------- bridges
 
@@ -233,12 +228,10 @@ function billingFn(name) {
 }
 
 async function openCheckout(plan) {
+  // Checkout is disabled in v1.0.x free build — no Pro tier exists.
+  return;
+  // eslint-disable-next-line no-unreachable
   const session = await getSession();
-  if (!session) {
-    // Force sign-in first.
-    location.href = chrome.runtime.getURL('auth/auth.html?returnTo=' + encodeURIComponent(location.href + '?upgrade=' + plan));
-    return;
-  }
   const r = await fetch(billingFn('checkout'), {
     method: 'POST',
     headers: {
