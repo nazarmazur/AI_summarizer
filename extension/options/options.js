@@ -1,6 +1,6 @@
 import { getSettings, setSettings, getApiKeys, setApiKeys } from '../lib/ai-api.js';
 import { getSession, signOut } from '../lib/supabase.js';
-import { LANGUAGES, DEFAULT_SETTINGS, SUPABASE_URL, SUPABASE_ANON, BILLING_PROVIDER, RELEASE_MODE, HAS_SUPABASE, HAS_PRO } from '../lib/config.js';
+import { LANGUAGES, DEFAULT_SETTINGS, SUPABASE_URL, SUPABASE_ANON, BILLING_PROVIDER, RELEASE_MODE, HAS_SUPABASE, HAS_PRO, DONATE } from '../lib/config.js';
 import { getHealth, resetHealth } from '../lib/bridge-health.js';
 import { getTierStatus, invalidateTierCache } from '../lib/tier.js';
 import { PRO_MONTHLY_POOL_LIMIT, FREE_DAILY_POOL_LIMIT } from '../lib/features.js';
@@ -394,12 +394,58 @@ function applyReleaseGates() {
   }
 }
 
+// --------------------------------------------------------------------- donate
+
+function setupDonate() {
+  const card = document.getElementById('donateCard');
+  if (!card) return;
+  if (!DONATE || !DONATE.enabled) { card.hidden = true; return; }
+  card.hidden = false;
+
+  const patreon = document.getElementById('donatePatreon');
+  const paypal  = document.getElementById('donatePaypal');
+  if (patreon) {
+    if (DONATE.patreon && !DONATE.patreon.includes('YOUR_HANDLE')) patreon.href = DONATE.patreon;
+    else patreon.style.display = 'none';
+  }
+  if (paypal) {
+    if (DONATE.paypal) paypal.href = DONATE.paypal;
+    else paypal.style.display = 'none';
+  }
+
+  const cryptoBox = document.getElementById('donateCrypto');
+  if (cryptoBox) {
+    cryptoBox.innerHTML = '';
+    const coins = (DONATE.crypto && typeof DONATE.crypto === 'object') ? DONATE.crypto : {};
+    for (const [coin, addr] of Object.entries(coins)) {
+      if (!addr) continue;
+      const row = document.createElement('div');
+      row.className = 'crypto-row';
+      row.innerHTML =
+        '<span class="crypto-coin">' + escHTML(coin) + '</span>' +
+        '<code class="crypto-addr">' + escHTML(addr) + '</code>' +
+        '<button class="btn btn-ghost btn-sm crypto-copy" type="button">' + (t('btnCopy') || 'Copy') + '</button>';
+      const btn = row.querySelector('.crypto-copy');
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(addr);
+          const old = btn.textContent;
+          btn.textContent = t('btnCopied') || 'Copied!';
+          setTimeout(() => { btn.textContent = old; }, 1500);
+        } catch (_) {}
+      });
+      cryptoBox.appendChild(row);
+    }
+  }
+}
+
 fillLanguageOptions();
 loadAll();
 paintBridgeStatuses();
 applyReleaseGates();
 if (HAS_PRO) paintBilling();
 paintTemplates();
+setupDonate();
 
 // If user arrived via ?upgrade=monthly|yearly from the popup, auto-trigger checkout.
 {

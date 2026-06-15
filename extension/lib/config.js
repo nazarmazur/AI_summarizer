@@ -29,6 +29,35 @@ export const HAS_SUPABASE = !SUPABASE_URL.includes('YOUR-PROJECT') && !SUPABASE_
 // True when Pro features should be visible/accessible.
 export const HAS_PRO = RELEASE_MODE === 'full';
 
+// =============================================================================
+// Voluntary donations ("Support development"). This is NOT a subscription and
+// NOT a paywall — it never gates any feature. Disabled by default so it does
+// not appear in the version under Chrome Web Store review. After the extension
+// is APPROVED, fill in the links/addresses below, set enabled: true, bump the
+// version, and submit an update.
+//
+// CWS-safety rules for this block: framing is always "Support" / "Donate",
+// never "Upgrade / Pro / Premium / Trial / Subscribe". PayPal link uses
+// no_recurring=1 to make it explicitly one-time.
+// =============================================================================
+export const DONATE = {
+  enabled: false,            // ← flip to true ONLY after CWS approval
+
+  // One-time PayPal donation bound to the developer's PayPal email.
+  paypal:  'https://www.paypal.com/donate/?business=m.nazar77@gmail.com&no_recurring=1&item_name=Support%20Smart%20AI%20Summarizer&currency_code=USD',
+
+  // Patreon page — fill in your handle before enabling.
+  patreon: 'https://www.patreon.com/YOUR_HANDLE',
+
+  // Crypto wallet addresses — fill in before enabling. Leave a value empty to
+  // hide that coin. Shown with a copy button (no third party, no fees).
+  crypto: {
+    BTC:  '',   // e.g. 'bc1q...'
+    ETH:  '',   // e.g. '0x...'
+    USDT: '',   // TRC20 or ERC20 address
+  },
+};
+
 // Which billing provider to use for Pro subscriptions.
 // 'paddle' (recommended)   — Paddle Billing, MoR, handles VAT/tax globally
 // 'lemonsqueezy'           — Lemon Squeezy, MoR, simpler setup

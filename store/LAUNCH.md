@@ -139,6 +139,25 @@
 
 Існуючі користувачі v1.0.0 побачать у Settings новий розділ «Sign in to sync» — підписатись необов'язково, BYOK продовжує працювати.
 
+## 💝 Активувати донати (ПІСЛЯ approval)
+
+Код донатів уже у репо, але **вимкнений** (`DONATE.enabled = false` у `lib/config.js`), тож у версії на review його не видно. Це **добровільна підтримка, НЕ підписка** — нічого не блокує.
+
+Після того як розширення **схвалене й опубліковане**:
+
+1. У `extension/lib/config.js` → блок `DONATE`:
+   - `enabled: true`
+   - `patreon: 'https://www.patreon.com/ВАШ_HANDLE'` (замінити YOUR_HANDLE)
+   - `crypto: { BTC: 'bc1q...', ETH: '0x...', USDT: '...' }` (вставити реальні адреси, порожні — приховуються)
+   - `paypal` вже налаштований на donate-лінк з вашим email (one-time, no_recurring)
+2. `powershell ./store/build-zip.ps1 -Version 1.1.0`
+3. Завантажити новий zip у CWS.
+4. У описі магазину додати один рядок: *"If you find it useful, you can optionally support development — see the Support section in settings."* (рамка «support», НЕ «subscription/upgrade»).
+
+**CWS-правила донатів:** формулювання завжди «Support / Donate», ніколи «Upgrade / Pro / Premium / Trial / Subscribe». Кнопки не гейтять жодну функцію. PayPal-лінк використовує `no_recurring=1` (явно разовий). Це дозволено політикою CWS (як «Buy me a coffee»).
+
+⚠️ **НЕ вмикайте донати у версії, що зараз на review** — спочатку approval, потім донати окремим апдейтом.
+
 ---
 
 ## 🆘 Якщо щось пішло не так

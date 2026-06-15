@@ -1,5 +1,5 @@
 import { getSettings, setSettings, getApiKeys } from '../lib/ai-api.js';
-import { LANGUAGES, DEFAULT_SETTINGS, MODELS, modelsByProvider, RELEASE_MODE, HAS_SUPABASE, HAS_PRO } from '../lib/config.js';
+import { LANGUAGES, DEFAULT_SETTINGS, MODELS, modelsByProvider, RELEASE_MODE, HAS_SUPABASE, HAS_PRO, DONATE } from '../lib/config.js';
 import { getTierStatus } from '../lib/tier.js';
 import { FEATURES, canUse, isProModel } from '../lib/features.js';
 import { getAllTemplates } from '../lib/templates.js';
@@ -1020,6 +1020,19 @@ settingsBtn.addEventListener('click', () => {
 historyBtn.addEventListener('click', () => {
   chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });
 });
+
+// Donate heart — visible only when donations are enabled (off during CWS review).
+const donateBtn = $('donateBtn');
+if (donateBtn) {
+  if (DONATE && DONATE.enabled) {
+    donateBtn.hidden = false;
+    donateBtn.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html#donate') });
+    });
+  } else {
+    donateBtn.hidden = true;
+  }
+}
 
 urlInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') run('summary');

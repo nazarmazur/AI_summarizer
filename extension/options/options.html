@@ -193,6 +193,17 @@
       </div>
     </section>
 
+    <!-- SUPPORT / DONATE — voluntary, never gates features. Hidden unless DONATE.enabled -->
+    <section class="card" id="donateCard" hidden>
+      <h2>♥ <span data-i18n="donateTitle">Support development</span></h2>
+      <p class="muted small" data-i18n="donateHint">This extension is free and open source. If it saves you time, a small one-time tip helps keep it maintained. Completely optional.</p>
+      <div class="donate-row">
+        <a id="donatePatreon" class="btn btn-primary btn-sm" href="#" target="_blank" rel="noopener">Patreon</a>
+        <a id="donatePaypal"  class="btn btn-ghost btn-sm"  href="#" target="_blank" rel="noopener">PayPal</a>
+      </div>
+      <div class="donate-crypto" id="donateCrypto"></div>
+    </section>
+
     <div class="footer-row">
       <button class="btn btn-primary" id="saveBtn" data-i18n="saveSettings">Save</button>
       <span class="muted" id="savedMsg" hidden data-i18n="saved">Saved!</span>
