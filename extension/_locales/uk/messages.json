@@ -83,9 +83,13 @@
   "onbNoKeysConfirm":   { "message": "Ви вибрали API режим, але не ввели жодного ключа. Продовжити все одно?" },
 
   "onbDemoTitle":       { "message": "Спробуймо!" },
-  "onbDemoLead":        { "message": "Ось приклад YouTube відео — спробуємо його підсумувати." },
-  "onbDemoRun":         { "message": "Підсумувати" },
-  "onbDemoSkip":        { "message": "Пропустити" },
+  "onbDemoTitle":       { "message": "Як це працює" },
+  "onbDemoLead":        { "message": "Три прості кроки, щоб отримати підсумок." },
+  "onbDemoRun":         { "message": "Показати підказки" },
+  "onbDemoSkip":        { "message": "Далі" },
+  "onbStep1":           { "message": "Відкрийте відео, статтю чи PDF." },
+  "onbStep2":           { "message": "Натисніть іконку розширення на панелі." },
+  "onbStep3":           { "message": "Клікніть «Сводка» — і читайте підсумок." },
 
   "onbDoneTitle":       { "message": "Готово!" },
   "onbDoneLead":        { "message": "Тепер ви можете підсумовувати будь-що." },

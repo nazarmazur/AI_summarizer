@@ -83,9 +83,13 @@
   "onbNoKeysConfirm":   { "message": "You picked API mode but didn't enter a key. Continue anyway?" },
 
   "onbDemoTitle":       { "message": "Let's try it!" },
-  "onbDemoLead":        { "message": "Here's a sample YouTube video — we'll summarize it." },
-  "onbDemoRun":         { "message": "Summarize" },
-  "onbDemoSkip":        { "message": "Skip" },
+  "onbDemoTitle":       { "message": "How it works" },
+  "onbDemoLead":        { "message": "Three simple steps to get a summary." },
+  "onbDemoRun":         { "message": "Show tips" },
+  "onbDemoSkip":        { "message": "Next" },
+  "onbStep1":           { "message": "Open a video, article, or PDF." },
+  "onbStep2":           { "message": "Click the extension icon in the toolbar." },
+  "onbStep3":           { "message": "Click Summarize — and read the result." },
 
   "onbDoneTitle":       { "message": "You're set!" },
   "onbDoneLead":        { "message": "You can summarize anything now." },

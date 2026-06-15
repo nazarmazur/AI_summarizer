@@ -118,33 +118,25 @@ const demoOutput = $('demoOutput');
 const demoStatus = $('demoStatus');
 const demoBody   = $('demoBody');
 
+// Step 3 is intentionally instructional only — it does NOT fire a live network
+// summary. A demo call would depend on a specific video's captions, a valid key,
+// and network access; any of those failing would make onboarding look broken.
+// Instead we show clear, reliable guidance and let the user proceed.
 demoRunBtn?.addEventListener('click', () => {
-  demoRunBtn.disabled = true;
-  demoSkipBtn.textContent = t('onbNext') || 'Next';
-  demoOutput.hidden = false;
-  demoStatus.textContent = t('loadingTranscript');
-  demoBody.innerHTML = '';
-
-  const port = chrome.runtime.connect({ name: 'ais-stream' });
-  let acc = '';
-  port.onMessage.addListener((m) => {
-    if (!m) return;
-    if (m.type === 'AIS_PHASE')   { demoStatus.textContent = t(m.phase === 'generate' ? 'loadingSummary' : 'loadingTranscript'); return; }
-    if (m.type === 'AIS_DELTA')   { acc += m.text || ''; demoBody.innerHTML = mdRender(acc); return; }
-    if (m.type === 'AIS_DONE')    { demoStatus.textContent = '✓'; demoBody.innerHTML = mdRender(m.result?.text || acc); demoRunBtn.hidden = true; return; }
-    if (m.type === 'AIS_ERR')     { demoStatus.textContent = m.error || t('errorGeneric'); demoRunBtn.disabled = false; }
-  });
-  port.postMessage({
-    type: 'AIS_RUN',
-    payload: {
-      kind:    'summary',
-      url:     'https://www.youtube.com/watch?v=0e0duD8_LFE',
-      language: 'auto',
-      length:  'short',
-      modelKey: 'auto',
-      source:   chosenSource || 'pool',
-    },
-  });
+  demoRunBtn.hidden = true;
+  if (demoSkipBtn) demoSkipBtn.textContent = t('onbNext') || 'Next';
+  if (demoOutput) demoOutput.hidden = false;
+  if (demoStatus) demoStatus.textContent = '✓';
+  if (demoBody) {
+    demoBody.innerHTML =
+      '<p><strong>' + t('onbDoneTitle') + '</strong></p>' +
+      '<ul>' +
+        '<li>' + (t('onbTipYT') || 'On a video page — open the popup and click Summarize.') + '</li>' +
+        '<li>' + (t('onbTipAnySite') || 'On an article or PDF — click the toolbar icon, then Summarize.') + '</li>' +
+        '<li>' + (t('onbTipChat') || 'After the summary — ask follow-up questions in the chat.') + '</li>' +
+      '</ul>';
+  }
+  return;
 });
 
 // --- step 4: finish ----------------------------------------------

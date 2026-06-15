@@ -566,9 +566,10 @@ chrome.runtime.onConnect.addListener((port) => {
           return;
         }
 
-        const tierStatus = await getTierStatus();
-        const tier = tierStatus.tier || 'free';
-        if (isProModel(msg.modelKey) && tier !== 'pro') {
+        // In free release mode there is no Pro tier — treat everyone as Pro and
+        // skip the Supabase tier lookup entirely (placeholder creds would fail).
+        const tier = HAS_PRO ? ((await getTierStatus()).tier || 'free') : 'pro';
+        if (HAS_PRO && isProModel(msg.modelKey) && tier !== 'pro') {
           safePost(port, { type: 'AIS_ERR', error: 'PRO_REQUIRED', code: 'PRO_REQUIRED', feature: FEATURES.PREMIUM_MODELS });
           try { port.disconnect(); } catch (_) {}
           return;

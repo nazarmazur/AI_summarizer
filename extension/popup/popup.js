@@ -1,5 +1,4 @@
 import { getSettings, setSettings, getApiKeys } from '../lib/ai-api.js';
-import { getSession } from '../lib/supabase.js';
 import { LANGUAGES, DEFAULT_SETTINGS, MODELS, modelsByProvider, RELEASE_MODE, HAS_SUPABASE, HAS_PRO } from '../lib/config.js';
 import { getTierStatus } from '../lib/tier.js';
 import { FEATURES, canUse, isProModel } from '../lib/features.js';
@@ -71,64 +70,61 @@ const chatSendBtn   = $('chatSendBtn');
 let settings = { ...DEFAULT_SETTINGS };
 let lastJob  = null;
 let currentTier = 'free';
-let upsellContext = null;   // { feature: <FEATURES.X>, pendingKind: 'summary'|'timestamps' }
+let upsellContext = null;   // { feature, pendingKind } — only used in Pro builds
 
 // --------------------------------------------------------------------- upsell
+// The upsell modal only exists in 'full' release builds. In the free build the
+// modal HTML is absent, so every reference here is null-guarded and openUpsell
+// is a no-op. This block must never throw at load time regardless of build.
 
-const upsellModal = $('upsellModal');
-const upsellGoBtn = $('upsellGoBtn');
+const upsellModal = $('upsellModal');   // null in free build
+const upsellGoBtn = $('upsellGoBtn');   // null in free build
 
 function openUpsell(feature, pendingKind) {
+  if (!upsellModal) return;             // no Pro UI in free build
   upsellContext = { feature, pendingKind };
   upsellModal.hidden = false;
 }
 function closeUpsell() {
+  if (!upsellModal) return;
   upsellModal.hidden = true;
   upsellContext = null;
 }
 
-// Triple-layered close handling so nothing slips through:
-// (1) Event delegation on document for any [data-modal-close] element
-document.addEventListener('click', (e) => {
-  const t = e.target;
-  if (t && (t.matches('[data-modal-close]') || (typeof t.closest === 'function' && t.closest('[data-modal-close]')))) {
-    e.preventDefault();
-    e.stopPropagation();
-    closeUpsell();
-  }
-}, true /* capture phase — runs before bubbled menu-hide listener */);
+if (upsellModal) {
+  // Close via any [data-modal-close] element (capture phase).
+  document.addEventListener('click', (e) => {
+    const tt = e.target;
+    if (tt && (tt.matches('[data-modal-close]') || (typeof tt.closest === 'function' && tt.closest('[data-modal-close]')))) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeUpsell();
+    }
+  }, true);
 
-// (2) Direct binding on the modal itself (idempotent)
-upsellModal.addEventListener('click', (e) => {
-  if (e.target === upsellModal || e.target.closest('[data-modal-close]')) {
-    closeUpsell();
-  }
-});
-
-// (3) Esc key closes modal
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !upsellModal.hidden) {
-    e.preventDefault();
-    closeUpsell();
-  }
-});
-
-// Price card selection
-document.querySelectorAll('.price-card').forEach((card) => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.price-card').forEach((c) => c.classList.remove('is-selected'));
-    card.classList.add('is-selected');
-    card.querySelector('input[type=radio]').checked = true;
+  upsellModal.addEventListener('click', (e) => {
+    if (e.target === upsellModal || e.target.closest('[data-modal-close]')) closeUpsell();
   });
-});
 
-upsellGoBtn.addEventListener('click', () => {
-  const plan = document.querySelector('input[name=ais-plan]:checked')?.value || 'yearly';
-  // Open billing page in a new tab with the chosen plan preselected.
-  const url = chrome.runtime.getURL('options/options.html?upgrade=' + encodeURIComponent(plan));
-  chrome.tabs.create({ url });
-  closeUpsell();
-});
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !upsellModal.hidden) { e.preventDefault(); closeUpsell(); }
+  });
+
+  document.querySelectorAll('.price-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.price-card').forEach((c) => c.classList.remove('is-selected'));
+      card.classList.add('is-selected');
+      const radio = card.querySelector('input[type=radio]');
+      if (radio) radio.checked = true;
+    });
+  });
+
+  if (upsellGoBtn) upsellGoBtn.addEventListener('click', () => {
+    const plan = document.querySelector('input[name=ais-plan]:checked')?.value || 'yearly';
+    chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html?upgrade=' + encodeURIComponent(plan)) });
+    closeUpsell();
+  });
+}
 
 // --------------------------------------------------------------------- menus
 
@@ -1085,35 +1081,38 @@ function listenForThemeMessages() {
   }
 }
 
+// Wire the menu chips SYNCHRONOUSLY at module load — never inside the async
+// init(). wireMenu only attaches the chip-toggle + delegated menu-item click
+// handlers (it does not need settings or menu content), so doing it eagerly
+// guarantees the chips respond immediately and survive any failure in init().
+// In free release mode everyone is treated as Pro, so unlock up front.
+if (!HAS_PRO) currentTier = 'pro';
+wireMenu(langChip,     langMenu,     'language');
+wireMenu(lengthChip,   lengthMenu,   'length');
+wireMenu(modelChip,    modelMenu,    'model');
+wireMenu(templateChip, templateMenu, 'templateId');
+
 async function init() {
-  detectEmbedContext();
-  listenForThemeMessages();
-  settings = { ...DEFAULT_SETTINGS, ...(await getSettings()) };
-  buildLangMenu();
-  buildModelMenu();
-  await buildTemplateMenu();
-  wireMenu(langChip,     langMenu,     'language');
-  wireMenu(lengthChip,   lengthMenu,   'length');
-  wireMenu(modelChip,    modelMenu,    'model');
-  wireMenu(templateChip, templateMenu, 'templateId');
-  if (window.AIS_I18N) window.AIS_I18N.applyI18n();
-  updateChips();
-  await prefillFromActiveTab();
+  try {
+    detectEmbedContext();
+    listenForThemeMessages();
+    settings = { ...DEFAULT_SETTINGS, ...(await getSettings().catch(() => ({}))) };
+    buildLangMenu();
+    buildModelMenu();
+    await buildTemplateMenu().catch(() => {});
+    if (window.AIS_I18N) window.AIS_I18N.applyI18n();
+    updateChips();
+    await prefillFromActiveTab().catch(() => {});
 
-  // Hide the history button in free mode if there's literally no history yet —
-  // it's still functional (local store), so we keep it visible by default.
-
-  if (!HAS_PRO) {
-    currentTier = 'pro';   // unlock everything in free release
-  }
-  applyTierToUI();
-  if (urlInput.value) updateSourceChip(urlInput.value);
-
-  // If user has no API keys AND source is "api", warn them
-  const keys = await getApiKeys();
-  const hasAnyKey = !!(keys.gemini || keys.openai || keys.anthropic);
-  if (!hasAnyKey && settings.source !== 'browser') {
-    // soft hint via meta — not blocking
+    if (HAS_PRO) {
+      // Pro builds: resolve real tier; free builds already set 'pro' above.
+      try { const ts = await getTierStatus(); currentTier = ts.tier || 'free'; } catch (_) {}
+    }
+    applyTierToUI();
+    if (urlInput.value) updateSourceChip(urlInput.value);
+  } catch (e) {
+    // Never let an init failure leave the popup half-dead — log and move on.
+    console.error('[AIS] popup init failed:', e);
   }
 }
 

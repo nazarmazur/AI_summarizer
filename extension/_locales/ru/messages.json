@@ -83,9 +83,13 @@
   "onbNoKeysConfirm":   { "message": "Вы выбрали API режим, но не ввели ни одного ключа. Продолжить?" },
 
   "onbDemoTitle":       { "message": "Попробуем!" },
-  "onbDemoLead":        { "message": "Вот пример YouTube видео — попробуем его суммировать." },
-  "onbDemoRun":         { "message": "Суммировать" },
-  "onbDemoSkip":        { "message": "Пропустить" },
+  "onbDemoTitle":       { "message": "Как это работает" },
+  "onbDemoLead":        { "message": "Три простых шага, чтобы получить сводку." },
+  "onbDemoRun":         { "message": "Показать подсказки" },
+  "onbDemoSkip":        { "message": "Далее" },
+  "onbStep1":           { "message": "Откройте видео, статью или PDF." },
+  "onbStep2":           { "message": "Нажмите иконку расширения на панели." },
+  "onbStep3":           { "message": "Кликните «Сводка» — и читайте сводку." },
 
   "onbDoneTitle":       { "message": "Готово!" },
   "onbDoneLead":        { "message": "Теперь вы можете суммировать что угодно." },

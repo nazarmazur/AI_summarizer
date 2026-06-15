@@ -111,29 +111,31 @@
       </div>
     </section>
 
-    <!-- Step 3: demo -->
+    <!-- Step 3: how it works -->
     <section class="step-pane" data-step="3">
-      <h1 data-i18n="onbDemoTitle">Спробуймо!</h1>
-      <p class="lead" data-i18n="onbDemoLead">Ось приклад YouTube відео — ми спробуємо його підсумувати.</p>
+      <h1 data-i18n="onbDemoTitle">Як це працює</h1>
+      <p class="lead" data-i18n="onbDemoLead">Три прості кроки, щоб отримати підсумок.</p>
 
-      <div class="demo-card">
-        <img src="https://i.ytimg.com/vi/0e0duD8_LFE/hqdefault.jpg" alt="" onerror="this.style.display='none'" />
+      <div class="demo-card" style="display:block;">
         <div class="demo-meta">
-          <span class="demo-badge" data-i18n="srcYoutube">YouTube</span>
-          <h3>How to build an AI extension</h3>
-          <p class="muted small">youtube.com/watch?v=0e0duD8_LFE</p>
+          <h3 style="margin:0 0 8px;">1 · 2 · 3</h3>
+          <p class="muted small" style="margin:0;">
+            <span data-i18n="onbStep1">Відкрийте відео, статтю чи PDF.</span><br/>
+            <span data-i18n="onbStep2">Натисніть іконку розширення на панелі.</span><br/>
+            <span data-i18n="onbStep3">Клікніть «Сводка» — і читайте підсумок.</span>
+          </p>
         </div>
       </div>
 
       <div class="demo-output" id="demoOutput" hidden>
-        <div class="demo-status" id="demoStatus" data-i18n="loadingTranscript">Завантаження…</div>
+        <div class="demo-status" id="demoStatus"></div>
         <article class="markdown" id="demoBody"></article>
       </div>
 
       <div class="step-actions">
         <button class="btn btn-ghost" data-prev data-i18n="onbBack">Назад</button>
-        <button class="btn btn-primary" id="demoRunBtn" data-i18n="onbDemoRun">Підсумувати</button>
-        <button class="btn btn-primary" data-next id="demoSkipBtn" data-i18n="onbDemoSkip">Пропустити</button>
+        <button class="btn btn-primary" id="demoRunBtn" data-i18n="onbDemoRun">Показати підказки</button>
+        <button class="btn btn-primary" data-next id="demoSkipBtn" data-i18n="onbNext">Далі</button>
       </div>
     </section>
 
