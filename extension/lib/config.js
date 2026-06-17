@@ -79,12 +79,12 @@ export function getOAuthRedirect() {
 // `model` is the API model identifier — must be a real model id on the provider's API
 // `description` is shown under the model name in the picker
 export const MODELS = {
-  // ─── Google Gemini ───────────────────────────────────────────────────
-  gemini:        { provider: 'gemini',    model: 'gemini-2.0-flash',           label: 'Gemini 2.0 Flash',           description: 'Fast & free. Great for daily summaries.',          group: 'free', order: 10 },
-  gemini25Flash: { provider: 'gemini',    model: 'gemini-2.5-flash',           label: 'Gemini 2.5 Flash',           description: 'Newer Flash. Smarter, still fast.',                group: 'free', order: 11 },
-  gemini15Flash: { provider: 'gemini',    model: 'gemini-1.5-flash',           label: 'Gemini 1.5 Flash',           description: 'Stable. 1M-token context for very long content.',  group: 'free', order: 12 },
-  geminiPro:     { provider: 'gemini',    model: 'gemini-2.5-pro',             label: 'Gemini 2.5 Pro',             description: 'Best Google model for deep reasoning.',            group: 'pro',  order: 13 },
-  gemini15Pro:   { provider: 'gemini',    model: 'gemini-1.5-pro',             label: 'Gemini 1.5 Pro',             description: 'Pro tier with 2M-token context window.',           group: 'pro',  order: 14 },
+  // ─── Google Gemini ─── (model ids verified against the live API, 2026-06) ──
+  gemini:            { provider: 'gemini', model: 'gemini-2.5-flash',     label: 'Gemini 2.5 Flash',       description: 'Fast & affordable. Great for daily summaries.',   group: 'free', order: 10 },
+  geminiFlashLatest: { provider: 'gemini', model: 'gemini-flash-latest',  label: 'Gemini Flash (latest)',  description: 'Always the newest fast Flash model.',             group: 'free', order: 11 },
+  gemini3Flash:      { provider: 'gemini', model: 'gemini-3.5-flash',     label: 'Gemini 3.5 Flash',       description: 'Newest Flash generation. Smart and quick.',       group: 'free', order: 12 },
+  geminiPro:         { provider: 'gemini', model: 'gemini-2.5-pro',       label: 'Gemini 2.5 Pro',         description: 'Deeper reasoning for complex content.',           group: 'pro',  order: 13 },
+  geminiProLatest:   { provider: 'gemini', model: 'gemini-pro-latest',    label: 'Gemini Pro (latest)',    description: 'Always the newest Pro model.',                    group: 'pro',  order: 14 },
 
   // ─── OpenAI ──────────────────────────────────────────────────────────
   gpt:           { provider: 'openai',    model: 'gpt-4o-mini',                label: 'GPT-4o mini',                description: 'Affordable OpenAI for everyday tasks.',            group: 'free', order: 20 },

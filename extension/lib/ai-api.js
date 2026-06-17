@@ -83,9 +83,11 @@ function bytesToBase64(bytes) {
   return btoa(s);
 }
 
-async function streamGemini({ apiKey, model, prompt, onDelta, attachments }) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
+// Self-healing fallback: if Google retires a model id, retry once with the
+// always-valid "latest" alias so summarization never silently 404s.
+const GEMINI_FALLBACK_MODEL = 'gemini-flash-latest';
 
+async function streamGemini({ apiKey, model, prompt, onDelta, attachments }) {
   const parts = [];
   if (attachments && attachments.length) {
     for (const a of attachments) {
@@ -105,11 +107,22 @@ async function streamGemini({ apiKey, model, prompt, onDelta, attachments }) {
     contents: [{ role: 'user', parts }],
     generationConfig: { temperature: 0.4 },
   };
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+
+  async function callModel(modelId) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  let resp = await callModel(model);
+  // If the chosen model is gone (404 / NOT_FOUND), transparently retry with the
+  // latest-flash alias once.
+  if (resp.status === 404 && model !== GEMINI_FALLBACK_MODEL) {
+    resp = await callModel(GEMINI_FALLBACK_MODEL);
+  }
   let full = '';
   for await (const payload of iterSSE(resp)) {
     try {
