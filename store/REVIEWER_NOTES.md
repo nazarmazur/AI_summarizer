@@ -5,41 +5,32 @@ Privacy practices tab / the submission step). Replace `PASTE_KEY_HERE` with a re
 Google Gemini API key you generate for free at https://aistudio.google.com/app/apikey
 (you can delete or rotate this key right after the review is approved).
 
+--- SHORT VERSION (≤500 chars — paste this) -------------------------------------
+BYOK extension — bring your own AI key. Test key for review:
+
+Gemini key: PASTE_KEY_HERE
+
+1. Install — onboarding opens.
+2. "How to use AI" → "I have an API key" → paste key → Next → Finish. (Or: icon → Settings → paste Gemini key → Save.)
+3. Open any YouTube video with captions.
+4. Click the toolbar icon (URL auto-fills) → "Summary".
+5. Summary streams in a few seconds.
+
+No account, sign-up or subscription. Key is review-only, rotated after approval.
 ---------------------------------------------------------------------------------
-TESTING INSTRUCTIONS — AI SUMMARIZATION
 
-This extension is "Bring Your Own Key" (BYOK): the user supplies their own AI
-provider API key, which stays in local browser storage. To let you test the core
-"AI summarization" feature without creating your own account, here is a working
-Google Gemini API key for the review:
+--- EXTRA-SHORT FALLBACK (~390 chars) -------------------------------------------
+BYOK extension — uses your own AI key. Review test key:
 
-    Gemini API key:  PASTE_KEY_HERE
+Gemini key: PASTE_KEY_HERE
 
-Steps to verify summarization works:
+1. Install → onboarding opens.
+2. Pick "I have an API key" → paste key → Finish.
+3. Open any YouTube video with captions.
+4. Click toolbar icon (URL auto-fills) → "Summary".
+5. Summary appears in seconds.
 
-1. Install the extension. The onboarding tab opens automatically.
-2. On the onboarding "How to use AI" step, choose "I have an API key", paste the
-   key above into the Gemini field, and click Next, then Finish.
-   (Alternatively: click the extension icon → gear/Settings → paste the key into
-    "Gemini API key" → Save.)
-3. Open any YouTube video that has captions (most popular videos and all TED
-   talks do — you can confirm a video has captions if the "CC" button is
-   available in its player).
-4. Click the extension toolbar icon. The video URL is auto-filled. (On a YouTube
-   watch page you can also use the "AI Summarize" button that appears in the
-   right sidebar above the suggested videos.)
-5. Click "Сводка" / "Summary".
-6. A structured AI summary streams into the panel within a few seconds.
-7. To test an article: open any news article or blog post, click the toolbar icon,
-   then click Summary.
-8. To test the Q&A: after a summary appears, type a question in the chat box at the
-   bottom (e.g. "What are the main points?") and press send.
-
-Notes:
-- No account, no sign-up, and no subscription are required or offered.
-- The key above is for review only and will be rotated after approval.
-- If summarization ever shows "Add an API key", it means the key field is empty —
-  re-paste the key in Settings and Save.
+No account or subscription needed. Key is review-only.
 ---------------------------------------------------------------------------------
 
 ## Why this is needed
