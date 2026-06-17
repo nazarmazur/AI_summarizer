@@ -86,22 +86,17 @@ export const MODELS = {
   geminiPro:         { provider: 'gemini', model: 'gemini-2.5-pro',       label: 'Gemini 2.5 Pro',         description: 'Deeper reasoning for complex content.',           group: 'pro',  order: 13 },
   geminiProLatest:   { provider: 'gemini', model: 'gemini-pro-latest',    label: 'Gemini Pro (latest)',    description: 'Always the newest Pro model.',                    group: 'pro',  order: 14 },
 
-  // ─── OpenAI ──────────────────────────────────────────────────────────
-  gpt:           { provider: 'openai',    model: 'gpt-4o-mini',                label: 'GPT-4o mini',                description: 'Affordable OpenAI for everyday tasks.',            group: 'free', order: 20 },
-  gpt35:         { provider: 'openai',    model: 'gpt-3.5-turbo',              label: 'GPT-3.5 Turbo',              description: 'Classic OpenAI. Cheap and very fast.',             group: 'free', order: 21 },
-  gptPro:        { provider: 'openai',    model: 'gpt-4o',                     label: 'GPT-4o',                     description: 'OpenAI flagship for nuanced summaries.',           group: 'pro',  order: 22 },
-  gpt4Turbo:     { provider: 'openai',    model: 'gpt-4-turbo',                label: 'GPT-4 Turbo',                description: 'Powerful with 128K context window.',               group: 'pro',  order: 23 },
-  gpt41:         { provider: 'openai',    model: 'gpt-4.1',                    label: 'GPT-4.1',                    description: 'Newest OpenAI flagship. Best for detailed work.',  group: 'pro',  order: 24 },
-  o3Mini:        { provider: 'openai',    model: 'o3-mini',                    label: 'OpenAI o3-mini',             description: 'Reasoning model. Slower, smarter on logic.',       group: 'pro',  order: 25 },
-  o1:            { provider: 'openai',    model: 'o1',                         label: 'OpenAI o1',                  description: 'OpenAI\'s deepest reasoning model.',               group: 'pro',  order: 26 },
+  // ─── OpenAI ─── (gpt-3.5-turbo & gpt-4-turbo verified dead; o1 retiring) ────
+  gpt:           { provider: 'openai',    model: 'gpt-4o-mini',                label: 'GPT-4o mini',                description: 'Affordable OpenAI for everyday summaries.',        group: 'free', order: 20 },
+  gptPro:        { provider: 'openai',    model: 'gpt-4o',                     label: 'GPT-4o',                     description: 'OpenAI flagship for nuanced summaries.',           group: 'pro',  order: 21 },
+  gpt41:         { provider: 'openai',    model: 'gpt-4.1',                    label: 'GPT-4.1',                    description: 'Large 1M-token context. Best for long content.',   group: 'pro',  order: 22 },
+  o3Mini:        { provider: 'openai',    model: 'o3-mini',                    label: 'OpenAI o3-mini',             description: 'Reasoning model. Slower, stronger on logic.',      group: 'pro',  order: 23 },
 
-  // ─── Anthropic Claude ───────────────────────────────────────────────
+  // ─── Anthropic Claude ─── (Anthropic API rejects "-latest" aliases) ────────
   claude:        { provider: 'anthropic', model: 'claude-haiku-4-5',           label: 'Claude Haiku 4.5',           description: 'Fast & affordable. Excellent for summaries.',      group: 'free', order: 30 },
-  claude35Haiku: { provider: 'anthropic', model: 'claude-3-5-haiku-latest',    label: 'Claude 3.5 Haiku',           description: 'Reliable older Haiku.',                            group: 'free', order: 31 },
-  claudePro:     { provider: 'anthropic', model: 'claude-sonnet-4-6',          label: 'Claude Sonnet 4.6',          description: 'Best balance of depth and speed.',                 group: 'pro',  order: 32 },
-  claude35Sonnet:{ provider: 'anthropic', model: 'claude-3-5-sonnet-latest',   label: 'Claude 3.5 Sonnet',          description: 'Trusted Sonnet. Great for nuanced writing.',       group: 'pro',  order: 33 },
-  claudeOpus:    { provider: 'anthropic', model: 'claude-opus-4-6',            label: 'Claude Opus 4.6',            description: 'Anthropic\'s most powerful model.',                group: 'pro',  order: 34 },
-  claude3Opus:   { provider: 'anthropic', model: 'claude-3-opus-latest',       label: 'Claude 3 Opus',              description: 'Original Opus. Deep, careful analysis.',           group: 'pro',  order: 35 },
+  claudePro:     { provider: 'anthropic', model: 'claude-sonnet-4-6',          label: 'Claude Sonnet 4.6',          description: 'Best balance of depth and speed.',                 group: 'pro',  order: 31 },
+  claudeOpus:    { provider: 'anthropic', model: 'claude-opus-4-6',            label: 'Claude Opus 4.6',            description: 'Powerful for deep, careful analysis.',             group: 'pro',  order: 32 },
+  claudeOpus8:   { provider: 'anthropic', model: 'claude-opus-4-8',            label: 'Claude Opus 4.8',            description: 'Newest Opus. Anthropic\'s most capable model.',     group: 'pro',  order: 33 },
 };
 
 // Helper: get models grouped by provider for menu rendering.

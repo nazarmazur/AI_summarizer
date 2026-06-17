@@ -139,20 +139,28 @@ async function streamGemini({ apiKey, model, prompt, onDelta, attachments }) {
   return full;
 }
 
+const OPENAI_FALLBACK_MODEL = 'gpt-4o-mini';
+
 async function streamOpenAI({ apiKey, model, prompt, onDelta }) {
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': 'Bearer ' + apiKey,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
-      stream: true,
-    }),
-  });
+  // Reasoning models (o1/o3/o4 family) reject temperature != 1 — omit it for them.
+  const isReasoning = /^o[0-9]/.test(model);
+  function buildBody(modelId) {
+    const b = { model: modelId, messages: [{ role: 'user', content: prompt }], stream: true };
+    if (!isReasoning) b.temperature = 0.4;
+    return JSON.stringify(b);
+  }
+  async function call(modelId) {
+    return fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: buildBody(modelId),
+    });
+  }
+  let resp = await call(model);
+  // Self-heal if the model id was retired (404 model_not_found).
+  if (resp.status === 404 && model !== OPENAI_FALLBACK_MODEL) {
+    resp = await call(OPENAI_FALLBACK_MODEL);
+  }
   let full = '';
   for await (const payload of iterSSE(resp)) {
     if (payload === '[DONE]') break;
@@ -169,22 +177,32 @@ async function streamOpenAI({ apiKey, model, prompt, onDelta }) {
   return full;
 }
 
+const ANTHROPIC_FALLBACK_MODEL = 'claude-haiku-4-5';
+
 async function streamAnthropic({ apiKey, model, prompt, onDelta }) {
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type':       'application/json',
-      'x-api-key':          apiKey,
-      'anthropic-version':  '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 4096,
-      messages: [{ role: 'user', content: prompt }],
-      stream: true,
-    }),
-  });
+  async function call(modelId) {
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':       'application/json',
+        'x-api-key':          apiKey,
+        'anthropic-version':  '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: modelId,
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }],
+        stream: true,
+      }),
+    });
+  }
+  let resp = await call(model);
+  // Self-heal if the model id was retired (404). Anthropic also returns 404 for
+  // invalid "-latest" aliases — fall back to a known-valid current model.
+  if (resp.status === 404 && model !== ANTHROPIC_FALLBACK_MODEL) {
+    resp = await call(ANTHROPIC_FALLBACK_MODEL);
+  }
   let full = '';
   for await (const payload of iterSSE(resp)) {
     try {
