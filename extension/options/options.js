@@ -12,7 +12,6 @@ const $ = (id) => document.getElementById(id);
 const langSel    = $('defaultLanguage');
 const lenSel     = $('defaultLength');
 const modelSel   = $('defaultModel');
-const pdfModeSel = $('defaultPdfMode');
 const sourceRadios = document.querySelectorAll('input[name=source]');
 const geminiKey    = $('geminiKey');
 const openaiKey    = $('openaiKey');
@@ -51,7 +50,6 @@ async function loadAll() {
   langSel.value    = settings.language;
   lenSel.value     = settings.length;
   modelSel.value   = settings.model;
-  pdfModeSel.value = settings.pdfMode || 'gemini';
   sourceRadios.forEach((r) => { r.checked = (r.value === (settings.source || 'api')); });
 
   // Keys
@@ -68,7 +66,6 @@ async function saveAll() {
     length:   lenSel.value,
     model:    modelSel.value,
     source:   chosenSource,
-    pdfMode:  pdfModeSel.value,
   });
   await setApiKeys({
     gemini:    geminiKey.value.trim()    || null,

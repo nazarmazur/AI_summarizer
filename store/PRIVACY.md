@@ -56,8 +56,10 @@ When you ask for a summary, the page content goes directly from your browser to 
 | Google Gemini | The page content + your prompt        | https://policies.google.com/privacy                       |
 | OpenAI       | The page content + your prompt        | https://openai.com/policies/privacy-policy                |
 | Anthropic    | The page content + your prompt        | https://www.anthropic.com/legal/privacy                   |
-| Stripe       | Only your email + Stripe customer id  | https://stripe.com/privacy                                |
-| Supabase     | Email, subscription state, history    | https://supabase.com/privacy                              |
+| Billing (Stripe / Paddle / Lemon Squeezy) — *optional, Pro only; not used in the free version* | Your email + customer id | See the provider's site |
+| Supabase — *optional, account sync only; not used in the free version* | Email, subscription state, synced history | https://supabase.com/privacy |
+
+> The free version of the extension has **no billing and no account** — it never contacts Stripe/Paddle/Lemon Squeezy or Supabase. Those rows describe optional features in a future paid release. The full, canonical privacy policy is the hosted [PRIVACY.html](https://nazarmazur.github.io/AI_summarizer/store/PRIVACY.html).
 
 If you use **browser-session mode** instead of an API key, the prompt is typed into your already-logged-in tab on gemini.google.com / chatgpt.com / claude.ai. In that case, it goes to the provider under your own account, exactly as if you had typed it manually.
 

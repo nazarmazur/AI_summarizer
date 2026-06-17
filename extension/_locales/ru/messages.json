@@ -51,9 +51,9 @@
   "srcTwitter":         { "message": "X (Twitter)" },
   "srcWebpage":         { "message": "Веб-страница" },
   "srcPdf":             { "message": "PDF документ" },
-  "errorPdfNeedsGemini": { "message": "Для PDF нужна Gemini-модель или режим pdfjs. Выберите Gemini в меню моделей." },
+  "errorPdfNeedsGemini": { "message": "Для PDF нужна Gemini-модель. Выберите Gemini в меню моделей." },
   "errorTimestampsUnavailable": { "message": "Тайм-коды доступны только для видео с субтитрами." },
-  "errorPdfTooLarge":   { "message": "PDF слишком большой. Переключитесь на pdfjs в настройках." },
+  "errorPdfTooLarge":   { "message": "PDF слишком большой (макс. 20 МБ)." },
   "errorPdfjsMissing":  { "message": "Библиотека pdf.js не установлена. Смотрите README." },
 
   "onbTitle":           { "message": "Добро пожаловать в AI Summarizer" },
@@ -166,10 +166,6 @@
   "tplStandard":        { "message": "Standard" },
   "tplPickerTooltip":   { "message": "Шаблон промпта" },
   "btnEdit":            { "message": "Редактировать" },
-
-  "pdfModeLabel":       { "message": "Обработка PDF" },
-  "pdfModeGemini":      { "message": "Gemini native (нативный PDF)" },
-  "pdfModePdfjs":       { "message": "pdf.js (локально, любая модель)" },
 
   "planFree":           { "message": "Бесплатный" },
   "planPro":            { "message": "Pro" },

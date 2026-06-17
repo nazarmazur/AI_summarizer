@@ -1,9 +1,9 @@
-﻿{
+{
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "1.0.13",
-  "version_name": "1.0.13 — Newest AI models (GPT-5, Gemini 3, Claude)",
+  "version": "1.0.14",
+  "version_name": "1.0.14",
   "default_locale": "uk",
   "author": "m.nazar77",
   "minimum_chrome_version": "124",
@@ -107,7 +107,6 @@
         "lib/i18n.js",
         "lib/config.js",
         "lib/ai-api.js",
-        "lib/pdfjs/*",
         "icons/*"
       ],
       "matches": [

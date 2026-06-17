@@ -15,7 +15,7 @@ const MAX_BYTES = 20 * 1024 * 1024; // 20 MB hard cap (Gemini will reject larger
 export async function extract(detected, options) {
   const bytes = await loadBytes(detected, options);
   if (bytes.byteLength > MAX_BYTES) {
-    const err = new Error(`PDF is too large for Gemini inline (${(bytes.byteLength/1024/1024).toFixed(1)} MB). Switch to pdfjs mode.`);
+    const err = new Error(`PDF is too large (${(bytes.byteLength/1024/1024).toFixed(1)} MB). Maximum supported size is 20 MB.`);
     err.code = 'PDF_TOO_LARGE';
     throw err;
   }

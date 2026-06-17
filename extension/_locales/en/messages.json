@@ -51,9 +51,9 @@
   "srcTwitter":         { "message": "X (Twitter)" },
   "srcWebpage":         { "message": "Web page" },
   "srcPdf":             { "message": "PDF document" },
-  "errorPdfNeedsGemini": { "message": "PDFs need a Gemini model, or switch to pdfjs mode. Pick Gemini in the model menu." },
+  "errorPdfNeedsGemini": { "message": "PDFs need a Gemini model. Pick Gemini in the model menu." },
   "errorTimestampsUnavailable": { "message": "Timestamps are only available for videos with captions." },
-  "errorPdfTooLarge":   { "message": "PDF is too big. Switch to pdfjs mode in settings." },
+  "errorPdfTooLarge":   { "message": "PDF is too big (max 20 MB)." },
   "errorPdfjsMissing":  { "message": "pdf.js library not installed. See README." },
 
   "onbTitle":           { "message": "Welcome to AI Summarizer" },
@@ -166,10 +166,6 @@
   "tplStandard":        { "message": "Standard" },
   "tplPickerTooltip":   { "message": "Prompt template" },
   "btnEdit":            { "message": "Edit" },
-
-  "pdfModeLabel":       { "message": "PDF processing" },
-  "pdfModeGemini":      { "message": "Gemini native (native PDF reader)" },
-  "pdfModePdfjs":       { "message": "pdf.js (local, any model)" },
 
   "planFree":           { "message": "Free" },
   "planPro":            { "message": "Pro" },

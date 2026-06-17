@@ -315,7 +315,7 @@ export async function generateStream(prompt, modelKey, onDelta, options) {
   const usePool     = (options && options.usePool)     || false;
 
   if (attachments && provider !== 'gemini') {
-    const err = new Error('PDF attachments require Gemini. Switch the model to a Gemini one, or pick "pdfjs" PDF mode.');
+    const err = new Error('PDF attachments require Gemini. Switch the model to a Gemini one.');
     err.code = 'PDF_REQUIRES_GEMINI';
     throw err;
   }

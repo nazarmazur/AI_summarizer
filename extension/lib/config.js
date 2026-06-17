@@ -124,7 +124,7 @@ export const DEFAULT_SETTINGS = {
   language: 'auto',        // 'auto' = follow YouTube/system, or 'uk', 'ru', 'en', 'es', 'de', 'fr', 'pl'
   length: 'medium',        // 'short' | 'medium' | 'long'
   uiLang: 'auto',          // 'auto' | 'uk' | 'ru' | 'en'
-  pdfMode: 'gemini',       // 'gemini' (native PDF) | 'pdfjs' (local text extract)
+  pdfMode: 'gemini',       // 'gemini' = native PDF reading (only supported mode)
 };
 
 // 35 most-used languages. Ordered by global speaker count.

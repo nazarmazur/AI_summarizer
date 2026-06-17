@@ -25,7 +25,6 @@ import * as twitch      from './twitch.js';
 import * as socialvideo from './socialvideo.js';
 import * as webpage     from './webpage.js';
 import * as pdfGemini   from './pdf-gemini.js';
-import * as pdfText     from './pdf-text.js';
 
 export function detectKind(input) {
   if (input && input.pdfBytes) {
@@ -82,11 +81,9 @@ export async function extract(input, options) {
     case 'social':
       return await socialvideo.extract(detected.url, detected.subKind, options);
 
-    case 'pdf': {
-      const useGemini = (options.pdfMode || 'gemini') === 'gemini';
-      const mod = useGemini ? pdfGemini : pdfText;
-      return await mod.extract({ ...detected, pdfBytes: input.pdfBytes }, options);
-    }
+    case 'pdf':
+      // PDFs are read natively by Gemini (text + layout + scanned pages).
+      return await pdfGemini.extract({ ...detected, pdfBytes: input.pdfBytes }, options);
 
     case 'webpage':
       return await webpage.extract(detected.url, options);

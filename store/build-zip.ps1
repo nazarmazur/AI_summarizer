@@ -46,15 +46,8 @@ if ($Version) {
 $ver = $manifest.version
 Write-Host "Building AI Summarizer v$ver" -ForegroundColor Cyan
 
-# 3. Sanity-check pdfjs files. If they're referenced in code but missing,
-#    pdfjs PDF mode will fail at runtime — warn the developer.
-$pdfjsDir = Join-Path $ext 'lib/pdfjs'
-$hasMjs   = Test-Path (Join-Path $pdfjsDir 'pdf.min.mjs')
-$hasWorker= Test-Path (Join-Path $pdfjsDir 'pdf.worker.min.mjs')
-if (-not $hasMjs -or -not $hasWorker) {
-  Write-Warning 'pdfjs files not found in lib/pdfjs/. pdfjs PDF mode will not work in this build.'
-  Write-Warning 'See README "Підтримка PDF" section to bundle pdfjs-dist before publishing.'
-}
+# 3. (PDF handling is Gemini-native only — the old bundled pdf.js mode was
+#     removed in v1.0.14, so there is nothing to sanity-check here anymore.)
 
 # 4. Stage with exclusions
 $stage = New-Item -ItemType Directory -Force -Path (Join-Path $env:TEMP "ais-stage-$([guid]::NewGuid())")
