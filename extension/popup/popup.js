@@ -192,9 +192,12 @@ function buildModelMenu() {
       const b = document.createElement('button');
       b.className = 'menu-item menu-item-rich' + (settings.model === m.key ? ' is-selected' : '');
       b.dataset.value = m.key;
-      if (m.group === 'pro') b.dataset.pro = '1';
+      // PRO badge/gating only when a real Pro tier exists. In the free (BYOK)
+      // build every model is usable with the user's own key, so no badge.
+      const showPro = HAS_PRO && m.group === 'pro';
+      if (showPro) b.dataset.pro = '1';
       b.innerHTML = `
-        <span class="mi-title">${escHTML(m.label)}${m.group === 'pro' ? '<span class="mi-pro">PRO</span>' : ''}</span>
+        <span class="mi-title">${escHTML(m.label)}${showPro ? '<span class="mi-pro">PRO</span>' : ''}</span>
         <span class="mi-sub">${escHTML(m.description || '')}</span>`;
       modelMenu.appendChild(b);
     }

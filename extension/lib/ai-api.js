@@ -142,8 +142,9 @@ async function streamGemini({ apiKey, model, prompt, onDelta, attachments }) {
 const OPENAI_FALLBACK_MODEL = 'gpt-4o-mini';
 
 async function streamOpenAI({ apiKey, model, prompt, onDelta }) {
-  // Reasoning models (o1/o3/o4 family) reject temperature != 1 — omit it for them.
-  const isReasoning = /^o[0-9]/.test(model);
+  // Reasoning models (o1/o3/o4 family) and the GPT-5 family reject any
+  // temperature other than the default — omit the param for them.
+  const isReasoning = /^o[0-9]/.test(model) || /^gpt-5/.test(model);
   function buildBody(modelId) {
     const b = { model: modelId, messages: [{ role: 'user', content: prompt }], stream: true };
     if (!isReasoning) b.temperature = 0.4;

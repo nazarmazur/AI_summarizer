@@ -79,24 +79,33 @@ export function getOAuthRedirect() {
 // `model` is the API model identifier — must be a real model id on the provider's API
 // `description` is shown under the model name in the picker
 export const MODELS = {
-  // ─── Google Gemini ─── (model ids verified against the live API, 2026-06) ──
-  gemini:            { provider: 'gemini', model: 'gemini-2.5-flash',     label: 'Gemini 2.5 Flash',       description: 'Fast & affordable. Great for daily summaries.',   group: 'free', order: 10 },
-  geminiFlashLatest: { provider: 'gemini', model: 'gemini-flash-latest',  label: 'Gemini Flash (latest)',  description: 'Always the newest fast Flash model.',             group: 'free', order: 11 },
-  gemini3Flash:      { provider: 'gemini', model: 'gemini-3.5-flash',     label: 'Gemini 3.5 Flash',       description: 'Newest Flash generation. Smart and quick.',       group: 'free', order: 12 },
-  geminiPro:         { provider: 'gemini', model: 'gemini-2.5-pro',       label: 'Gemini 2.5 Pro',         description: 'Deeper reasoning for complex content.',           group: 'pro',  order: 13 },
-  geminiProLatest:   { provider: 'gemini', model: 'gemini-pro-latest',    label: 'Gemini Pro (latest)',    description: 'Always the newest Pro model.',                    group: 'pro',  order: 14 },
+  // ─── Google Gemini ─── every id verified 200 against the live API, 2026-06 ──
+  gemini:            { provider: 'gemini', model: 'gemini-2.5-flash',      label: 'Gemini 2.5 Flash',       description: 'Fast & affordable. Great default for summaries.', group: 'free', order: 10 },
+  gemini3Flash:      { provider: 'gemini', model: 'gemini-3.5-flash',      label: 'Gemini 3.5 Flash',       description: 'Newest Flash generation. Smart and quick.',       group: 'pro',  order: 11 },
+  gemini3FlashLite:  { provider: 'gemini', model: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash-Lite',  description: 'Newest lightweight Flash. Very cheap & fast.',    group: 'free', order: 12 },
+  gemini25FlashLite: { provider: 'gemini', model: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite',  description: 'Cheapest stable Flash.',                          group: 'free', order: 13 },
+  geminiFlashLatest: { provider: 'gemini', model: 'gemini-flash-latest',   label: 'Gemini Flash (latest)',  description: 'Always the newest fast Flash model.',             group: 'free', order: 14 },
+  gemini3Pro:        { provider: 'gemini', model: 'gemini-3.1-pro-preview',label: 'Gemini 3.1 Pro',         description: 'Newest Pro. Deepest reasoning.',                  group: 'pro',  order: 15 },
+  geminiPro:         { provider: 'gemini', model: 'gemini-2.5-pro',        label: 'Gemini 2.5 Pro',         description: 'Stable Pro for complex content.',                 group: 'pro',  order: 16 },
+  geminiProLatest:   { provider: 'gemini', model: 'gemini-pro-latest',     label: 'Gemini Pro (latest)',    description: 'Always the newest Pro model.',                    group: 'pro',  order: 17 },
 
-  // ─── OpenAI ─── (gpt-3.5-turbo & gpt-4-turbo verified dead; o1 retiring) ────
-  gpt:           { provider: 'openai',    model: 'gpt-4o-mini',                label: 'GPT-4o mini',                description: 'Affordable OpenAI for everyday summaries.',        group: 'free', order: 20 },
-  gptPro:        { provider: 'openai',    model: 'gpt-4o',                     label: 'GPT-4o',                     description: 'OpenAI flagship for nuanced summaries.',           group: 'pro',  order: 21 },
-  gpt41:         { provider: 'openai',    model: 'gpt-4.1',                    label: 'GPT-4.1',                    description: 'Large 1M-token context. Best for long content.',   group: 'pro',  order: 22 },
-  o3Mini:        { provider: 'openai',    model: 'o3-mini',                    label: 'OpenAI o3-mini',             description: 'Reasoning model. Slower, stronger on logic.',      group: 'pro',  order: 23 },
+  // ─── OpenAI ─── every id verified recognized (429) against the live API ─────
+  gpt:           { provider: 'openai',    model: 'gpt-4o-mini',  label: 'GPT-4o mini',     description: 'Affordable OpenAI default for summaries.',        group: 'free', order: 20 },
+  gpt5Nano:      { provider: 'openai',    model: 'gpt-5-nano',   label: 'GPT-5 nano',      description: 'Newest tiny GPT-5. Fast & cheap.',                group: 'free', order: 21 },
+  gpt5Mini:      { provider: 'openai',    model: 'gpt-5-mini',   label: 'GPT-5 mini',      description: 'Newest mid GPT-5. Strong value.',                 group: 'pro',  order: 22 },
+  gpt5:          { provider: 'openai',    model: 'gpt-5',        label: 'GPT-5',           description: 'Newest GPT-5 flagship.',                          group: 'pro',  order: 23 },
+  gpt55:         { provider: 'openai',    model: 'gpt-5.5',      label: 'GPT-5.5',         description: 'Most capable OpenAI model.',                      group: 'pro',  order: 24 },
+  gptPro:        { provider: 'openai',    model: 'gpt-4o',       label: 'GPT-4o',          description: 'Proven flagship for nuanced summaries.',          group: 'pro',  order: 25 },
+  gpt41:         { provider: 'openai',    model: 'gpt-4.1',      label: 'GPT-4.1',         description: 'Large 1M-token context for long content.',        group: 'pro',  order: 26 },
+  o4Mini:        { provider: 'openai',    model: 'o4-mini',      label: 'OpenAI o4-mini',  description: 'Newest reasoning model. Strong on logic.',        group: 'pro',  order: 27 },
+  o3Mini:        { provider: 'openai',    model: 'o3-mini',      label: 'OpenAI o3-mini',  description: 'Reasoning model. Solid on logic.',                group: 'pro',  order: 28 },
 
-  // ─── Anthropic Claude ─── (Anthropic API rejects "-latest" aliases) ────────
-  claude:        { provider: 'anthropic', model: 'claude-haiku-4-5',           label: 'Claude Haiku 4.5',           description: 'Fast & affordable. Excellent for summaries.',      group: 'free', order: 30 },
-  claudePro:     { provider: 'anthropic', model: 'claude-sonnet-4-6',          label: 'Claude Sonnet 4.6',          description: 'Best balance of depth and speed.',                 group: 'pro',  order: 31 },
-  claudeOpus:    { provider: 'anthropic', model: 'claude-opus-4-6',            label: 'Claude Opus 4.6',            description: 'Powerful for deep, careful analysis.',             group: 'pro',  order: 32 },
-  claudeOpus8:   { provider: 'anthropic', model: 'claude-opus-4-8',            label: 'Claude Opus 4.8',            description: 'Newest Opus. Anthropic\'s most capable model.',     group: 'pro',  order: 33 },
+  // ─── Anthropic Claude ─── ids per provider catalog (API rejects "-latest") ──
+  claude:        { provider: 'anthropic', model: 'claude-haiku-4-5',  label: 'Claude Haiku 4.5',  description: 'Fast & affordable. Excellent for summaries.',     group: 'free', order: 30 },
+  claudeFable5:  { provider: 'anthropic', model: 'claude-fable-5',    label: 'Claude Fable 5',    description: 'Newest Claude flagship. Most capable.',           group: 'pro',  order: 31 },
+  claudeOpus8:   { provider: 'anthropic', model: 'claude-opus-4-8',   label: 'Claude Opus 4.8',   description: 'Newest Opus. Deep, careful analysis.',            group: 'pro',  order: 32 },
+  claudePro:     { provider: 'anthropic', model: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', description: 'Best balance of depth and speed.',                group: 'pro',  order: 33 },
+  claudeOpus:    { provider: 'anthropic', model: 'claude-opus-4-6',   label: 'Claude Opus 4.6',   description: 'Powerful for complex analysis.',                  group: 'pro',  order: 34 },
 };
 
 // Helper: get models grouped by provider for menu rendering.
