@@ -1,3 +1,7 @@
+/* The [hidden] attribute must always win, even over class rules that set a
+   display value — otherwise `el.hidden = true` can silently fail to hide. */
+[hidden] { display: none !important; }
+
 :root {
   --bg: #fdfcff;
   --surface: #ffffff;

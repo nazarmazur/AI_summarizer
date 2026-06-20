@@ -110,7 +110,7 @@ async function persistStep2() {
   return true;
 }
 
-// --- step 3: demo run --------------------------------------------
+// --- step 3: live example summary (NO key, NO network) -----------
 
 const demoRunBtn = $('demoRunBtn');
 const demoSkipBtn = $('demoSkipBtn');
@@ -118,25 +118,39 @@ const demoOutput = $('demoOutput');
 const demoStatus = $('demoStatus');
 const demoBody   = $('demoBody');
 
-// Step 3 is intentionally instructional only — it does NOT fire a live network
-// summary. A demo call would depend on a specific video's captions, a valid key,
-// and network access; any of those failing would make onboarding look broken.
-// Instead we show clear, reliable guidance and let the user proceed.
+// Show a REAL example summary with zero setup — no API key, no network call.
+// A brand-new user (and a Web Store reviewer testing in a clean profile) sees
+// exactly what "Summarize" produces. The content is a fixed, clearly-labelled
+// sample, streamed in line-by-line to mirror the live experience.
+const DEMO_FALLBACK_MD =
+  '**Key takeaways**\n\n- A short 5–10 minute walk noticeably sharpens attention.\n- Movement boosts blood flow to the brain and cuts mental fatigue.\n- Walking outdoors adds a mood lift from daylight and fresh air.\n\n**Bottom line:** short, frequent walks help you stay focused.';
+
+let demoPlayed = false;
 demoRunBtn?.addEventListener('click', () => {
-  demoRunBtn.hidden = true;
-  if (demoSkipBtn) demoSkipBtn.textContent = t('onbNext') || 'Next';
+  if (demoPlayed) return;
+  demoPlayed = true;
+  demoRunBtn.disabled = true;
   if (demoOutput) demoOutput.hidden = false;
-  if (demoStatus) demoStatus.textContent = '✓';
-  if (demoBody) {
-    demoBody.innerHTML =
-      '<p><strong>' + t('onbDoneTitle') + '</strong></p>' +
-      '<ul>' +
-        '<li>' + (t('onbTipYT') || 'On a video page — open the popup and click Summarize.') + '</li>' +
-        '<li>' + (t('onbTipAnySite') || 'On an article or PDF — click the toolbar icon, then Summarize.') + '</li>' +
-        '<li>' + (t('onbTipChat') || 'After the summary — ask follow-up questions in the chat.') + '</li>' +
-      '</ul>';
-  }
-  return;
+  if (demoStatus) demoStatus.textContent = t('onbSummarizing') || 'Summarizing…';
+
+  let md = t('onbExampleSummaryMd');
+  if (!md || md === 'onbExampleSummaryMd') md = DEMO_FALLBACK_MD;
+  const lines = md.split('\n');
+  let i = 0;
+  const timer = setInterval(() => {
+    i++;
+    if (demoBody) {
+      const partial = mdRender(lines.slice(0, i).join('\n'));
+      demoBody.innerHTML = partial + (i < lines.length ? '<span class="demo-cursor">▋</span>' : '');
+    }
+    if (demoOutput) demoOutput.scrollTop = demoOutput.scrollHeight;
+    if (i >= lines.length) {
+      clearInterval(timer);
+      if (demoBody) demoBody.innerHTML = mdRender(md);
+      if (demoStatus) demoStatus.textContent = t('onbExampleDone') || '✓ Done — your real summaries look just like this';
+      if (demoSkipBtn) { demoSkipBtn.classList.remove('btn-ghost'); demoSkipBtn.classList.add('btn-primary'); }
+    }
+  }, 130);
 });
 
 // --- step 4: finish ----------------------------------------------

@@ -1,5 +1,11 @@
 * { box-sizing: border-box; }
 
+/* The [hidden] attribute must always win, even over class rules that set a
+   display value (e.g. .choice{display:flex}). Without this, JS that hides an
+   element via `el.hidden = true` silently fails — which previously left the
+   non-functional "pool" option visible in the free build. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -218,6 +224,26 @@ html, body {
   font-size: 11px;
   font-weight: 600;
 }
+
+/* ----- example source (step 3) ----- */
+.demo-source {
+  padding: 14px 16px;
+  border: 1px solid #ececf2;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: #fafaff;
+}
+.demo-source h3 { margin: 8px 0 6px; font-size: 16px; font-weight: 600; }
+.demo-source p { margin: 0; line-height: 1.5; }
+
+.demo-cursor {
+  display: inline-block;
+  color: #6366f1;
+  font-weight: 700;
+  animation: blink 1s steps(2, start) infinite;
+  margin-left: 1px;
+}
+@keyframes blink { to { visibility: hidden; } }
 
 .demo-output {
   background: #fafaff;
