@@ -1201,7 +1201,13 @@ function detectEmbedContext() {
   const isPanel = new URLSearchParams(location.search).get('panel') === '1';
   if (isEmbed || isPanel) document.body.classList.add('embed');
   if (isPanel) document.body.classList.add('sidepanel');
-  if (isEmbed) reportHeightToParent();
+  if (isEmbed) {
+    // The base html,body rule sets min-height:520px — and body.embed only clears
+    // it on <body>, leaving <html> at 520. That floor made the reported content
+    // height ~520 so the card never shrank. Clear it on <html> too.
+    document.documentElement.style.minHeight = '0';
+    reportHeightToParent();
+  }
 }
 
 function listenForThemeMessages() {
