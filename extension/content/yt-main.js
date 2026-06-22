@@ -14,6 +14,85 @@
 (function () {
   'use strict';
 
+  // ── Caption capture ──────────────────────────────────────────────────────
+  // YouTube no longer serves caption ("timedtext") URLs to plain scripts — the
+  // baseUrl returns an empty 200 without a POT / proof-of-origin token that only
+  // the player's BotGuard can mint. So instead of fetching captions ourselves,
+  // we intercept the PLAYER's own timedtext request (which carries a valid POT)
+  // and keep its response. We install the hooks at document_start so we catch
+  // every caption fetch the player makes.
+  const __caps = []; // { lang, tlang, body }
+  function recordCap(url, body) {
+    if (!body || body.length < 20) return;
+    let lang = '', tlang = '';
+    try { const u = new URL(url, location.origin); lang = u.searchParams.get('lang') || ''; tlang = u.searchParams.get('tlang') || ''; } catch (_) { /* ignore */ }
+    __caps.push({ lang, tlang, body });
+    if (__caps.length > 8) __caps.shift();
+  }
+  try {
+    const of = window.fetch;
+    window.fetch = function (u) {
+      const url = (typeof u === 'string') ? u : (u && u.url) || '';
+      const p = of.apply(this, arguments);
+      if (url.indexOf('/api/timedtext') >= 0) {
+        p.then((r) => r.clone().text()).then((t) => recordCap(url, t)).catch(() => {});
+      }
+      return p;
+    };
+    const oo = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (m, url) { this.__aisU = url; return oo.apply(this, arguments); };
+    const os = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.send = function () {
+      const x = this;
+      if (x.__aisU && String(x.__aisU).indexOf('/api/timedtext') >= 0) {
+        x.addEventListener('load', () => { try { recordCap(String(x.__aisU), x.responseText || ''); } catch (_) { /* ignore */ } });
+      }
+      return os.apply(this, arguments);
+    };
+  } catch (_) { /* ignore */ }
+
+  function findCap(lang, tlang) {
+    for (let i = __caps.length - 1; i >= 0; i--) {
+      const c = __caps[i];
+      if (tlang) { if (c.tlang === tlang) return c.body; }
+      else if (!c.tlang && (!lang || c.lang === lang)) return c.body;
+    }
+    return null;
+  }
+  function waitForCap(lang, tlang, beforeLen, timeoutMs) {
+    return new Promise((resolve) => {
+      const deadline = Date.now() + timeoutMs;
+      (function poll() {
+        const c = findCap(lang, tlang);
+        if (c) return resolve(c);
+        if (__caps.length > beforeLen) return resolve(__caps[__caps.length - 1].body);
+        if (Date.now() > deadline) return resolve(null);
+        setTimeout(poll, 200);
+      })();
+    });
+  }
+
+  // Trigger the player to load a caption track, then capture its response.
+  async function captureViaPlayer(picked, preferLang) {
+    const p = document.getElementById('movie_player');
+    if (!p || typeof p.setOption !== 'function') return null;
+    const wantLang = picked.track.languageCode || '';
+    const wantTlang = picked.needsTranslation ? (preferLang || '') : '';
+    const existing = findCap(wantLang, wantTlang);
+    if (existing) return existing;
+    let prev = null;
+    try { prev = p.getOption && p.getOption('captions', 'track'); } catch (_) { /* ignore */ }
+    const beforeLen = __caps.length;
+    try { if (p.loadModule) p.loadModule('captions'); } catch (_) { /* ignore */ }
+    const opt = { languageCode: wantLang };
+    if (picked.needsTranslation) opt.translationLanguage = { languageCode: preferLang };
+    try { p.setOption('captions', 'track', opt); } catch (_) { return null; }
+    const body = await waitForCap(wantLang, wantTlang, beforeLen, 9000);
+    // Restore the user's previous caption state (usually off).
+    try { p.setOption('captions', 'track', prev || {}); if (p.hideSubtitles) p.hideSubtitles(); } catch (_) { /* ignore */ }
+    return body;
+  }
+
   window.addEventListener('message', async (e) => {
     const d = e.data;
     if (!d || d.source !== 'ais-iso' || d.type !== 'YT_REQ') return;
@@ -127,8 +206,14 @@
     const picked = pickTrack(tracks, preferLang);
     if (!picked || !picked.track.baseUrl) throw err('NO_CAPTIONS', meta);
 
-    const segments = await fetchSegments(String(picked.track.baseUrl), preferLang, picked.needsTranslation);
-    // Captions exist but YouTube served an empty body — its POT / anti-bot wall.
+    // Method A — fetch the baseUrl directly (fast; works where not POT-walled).
+    let segments = await fetchSegments(String(picked.track.baseUrl), preferLang, picked.needsTranslation);
+    // Method B — POT wall: the direct fetch came back empty. Let the player
+    // load the track with its own proof-of-origin token and capture the body.
+    if (!segments.length) {
+      const body = await captureViaPlayer(picked, preferLang);
+      if (body) segments = body.trim().charAt(0) === '{' ? parseJson3(body) : parseXml(body);
+    }
     if (!segments.length) throw err('CAPTIONS_BLOCKED', meta);
 
     return { language: picked.track.languageCode, isAuto: picked.track.kind === 'asr', segments, meta };
