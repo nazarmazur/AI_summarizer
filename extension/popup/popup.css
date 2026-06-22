@@ -27,6 +27,7 @@ html, body {
   margin: 0;
   padding: 0;
   width: 400px;
+  max-width: 100%;
   min-height: 520px;
   font: 14px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
   background: var(--bg);
@@ -39,6 +40,9 @@ body.embed {
   width: 100%;
   min-height: 0;
 }
+
+/* Docked side panel: stretch to the full panel height. */
+body.sidepanel { min-height: 100vh; }
 
 /* Dark mode (used when YouTube is in dark) */
 body.dark {

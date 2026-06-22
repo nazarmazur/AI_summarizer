@@ -123,6 +123,7 @@
   "loadingSynthesis":   { "message": "Об'єдную секції в фінальний підсумок…" },
   "bannerApiFallback":  { "message": "Не вдалось використати браузерну сесію $PROVIDER$ — переключилися на API.", "placeholders": { "provider": { "content": "$1" } } },
   "errorNoTranscript":  { "message": "У цього відео немає субтитрів." },
+  "errorCaptionsBlocked": { "message": "YouTube заблокував доступ до субтитрів цього відео. Спробуйте інше відео, статтю або PDF." },
   "errorNoApiKey":      { "message": "Додайте API-ключ у налаштуваннях або оберіть Браузерну сесію." },
   "errorAuth":          { "message": "Увійдіть, щоб користуватися розширенням." },
   "errorGeneric":       { "message": "Щось пішло не так. Спробуйте ще раз." },

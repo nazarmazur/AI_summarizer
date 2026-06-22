@@ -373,14 +373,26 @@ function sourceIconPath(kind) {
   }
 }
 
+function isVideoKind(kind) {
+  return kind === 'youtube' || kind === 'vimeo' || kind === 'twitch' || kind === 'social';
+}
+
+// Timestamps only make sense for videos — hide the tile for articles/PDFs.
+function setTimestampsVisible(show) {
+  const tile = document.querySelector('.tile-timestamps');
+  if (tile) tile.hidden = !show;
+}
+
 function updateSourceChip(url) {
   if (!url) {
     srcRow.hidden = true;
+    setTimestampsVisible(true);
     return;
   }
   const det = detectKindLocal(url);
   if (det.kind === 'unknown') {
     srcRow.hidden = true;
+    setTimestampsVisible(true);
     return;
   }
   const labelKey = sourceLabelKey(det.kind, det.subKind);
@@ -388,16 +400,34 @@ function updateSourceChip(url) {
   const path = srcIcon.querySelector('path');
   if (path) path.setAttribute('d', sourceIconPath(det.kind));
   srcRow.hidden = false;
+  setTimestampsVisible(isVideoKind(det.kind));
 }
 
 async function prefillFromActiveTab() {
+  // Embedded contexts (YouTube card / floating panel) pass the exact page URL as
+  // ?url= — use it directly. It's reliable (no active-tab race) and, because the
+  // target is unambiguous, we hide the now-redundant URL bar for a cleaner look.
+  const paramUrl = new URLSearchParams(location.search).get('url');
+  if (paramUrl && /^https?:/i.test(paramUrl)) {
+    const det = detectKindLocal(paramUrl);
+    if (det.kind !== 'unknown') {
+      urlInput.value = paramUrl;
+      const row = document.querySelector('.url-row');
+      if (row) row.hidden = true;
+      return;
+    }
+  }
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const url = tabs && tabs[0] && tabs[0].url;
-    if (url && /^https?:/i.test(url)) {
-      // Prefill anything we can summarise (videos, articles, PDFs).
+    // Prefill anything we can summarise — http(s) pages/videos AND the local
+    // file:// PDF the user is currently viewing.
+    if (url && /^(https?|file):/i.test(url)) {
       const det = detectKindLocal(url);
-      if (det.kind !== 'unknown') urlInput.value = url;
+      if (det.kind !== 'unknown') {
+        urlInput.value = url;
+        updateSourceChip(url);
+      }
     }
   } catch (_) { /* ignore */ }
 }
@@ -846,7 +876,9 @@ async function run(kind) {
         return;
       }
       const text = msg.error || t('errorGeneric');
-      if (/no-captions|NO_CAPTIONS|empty-transcript/.test(text)) {
+      if (msg.code === 'CAPTIONS_BLOCKED') {
+        showError(t('errorCaptionsBlocked'));
+      } else if (/no-captions|NO_CAPTIONS|empty-transcript/.test(text)) {
         showError(t('errorNoTranscript'));
       } else {
         showError(text);
@@ -1046,6 +1078,7 @@ urlInput.addEventListener('input', () => {
     updateSourceChip(urlInput.value.trim());
   } else {
     srcRow.hidden = true;
+    setTimestampsVisible(true);
   }
 });
 
@@ -1065,6 +1098,7 @@ pdfFileInput.addEventListener('change', async (e) => {
   const path = srcIcon.querySelector('path');
   if (path) path.setAttribute('d', sourceIconPath('pdf'));
   srcRow.hidden = false;
+  setTimestampsVisible(false); // PDF is not a video
 });
 // Reset PDF picker if user clears the input
 urlInput.addEventListener('focus', () => {
@@ -1080,7 +1114,11 @@ urlInput.addEventListener('focus', () => {
 
 function detectEmbedContext() {
   const isEmbed = window !== window.top;
-  if (isEmbed) document.body.classList.add('embed');
+  // The side panel loads popup.html?panel=1 — stretch to fill the panel width,
+  // same as the embedded YouTube iframe.
+  const isPanel = new URLSearchParams(location.search).get('panel') === '1';
+  if (isEmbed || isPanel) document.body.classList.add('embed');
+  if (isPanel) document.body.classList.add('sidepanel');
 }
 
 function listenForThemeMessages() {

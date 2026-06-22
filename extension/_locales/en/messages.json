@@ -123,6 +123,7 @@
   "loadingSynthesis":   { "message": "Combining sections into the final summary…" },
   "bannerApiFallback":  { "message": "Couldn't use $PROVIDER$ browser session — switched to API.", "placeholders": { "provider": { "content": "$1" } } },
   "errorNoTranscript":  { "message": "This video has no subtitles." },
+  "errorCaptionsBlocked": { "message": "YouTube blocked caption access for this video. Try another video, an article, or a PDF." },
   "errorNoApiKey":      { "message": "Add an API key in settings, or pick Browser session." },
   "errorAuth":          { "message": "Sign in to use the extension." },
   "errorGeneric":       { "message": "Something went wrong. Please retry." },

@@ -27,9 +27,13 @@
 
   // ---------- shared: iframe panel ----------
 
-  function makeIframe() {
+  function makeIframe(srcUrl) {
     const iframe = document.createElement('iframe');
-    iframe.src = chrome.runtime.getURL('popup/popup.html');
+    // Pass the exact page URL so the panel auto-targets THIS page reliably
+    // (no active-tab race) and can hide its now-redundant URL bar.
+    let src = chrome.runtime.getURL('popup/popup.html');
+    if (srcUrl) src += '?url=' + encodeURIComponent(srcUrl);
+    iframe.src = src;
     iframe.title = 'AI Summarizer';
     iframe.allow = 'clipboard-write';
     iframe.addEventListener('load', () => postTheme(iframe));
@@ -84,7 +88,7 @@
         </div>
       </div>
       <div class="ais-card-body"></div>`;
-    card.querySelector('.ais-card-body').appendChild(makeIframe());
+    card.querySelector('.ais-card-body').appendChild(makeIframe(location.href));
     sidebar.prepend(card);
 
     const collapseBtn = card.querySelector('#ais-card-collapse');
@@ -152,7 +156,7 @@
         </div>
       </div>
       <div class="ais-card-body"></div>`;
-    panel.querySelector('.ais-card-body').appendChild(makeIframe());
+    panel.querySelector('.ais-card-body').appendChild(makeIframe(location.href));
     document.body.appendChild(panel);
 
     panel.querySelector('#ais-panel-close').addEventListener('click', () => panel.remove());
@@ -233,6 +237,34 @@
   mo.observe(document.documentElement, { childList: true, subtree: true });
   document.addEventListener('yt-navigate-finish', () => setTimeout(tick, 400));
   tick();
+
+  // ---------- YouTube transcript bridge (isolated <-> MAIN world) ----------
+  // The service worker asks us for the transcript; we relay to the MAIN-world
+  // helper (content/yt-main.js), which fetches captions with the page's own
+  // session — dodging the HTTP 429 a background fetch hits.
+  if (isYouTube) {
+    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+      if (!msg || msg.type !== 'AIS_GET_TRANSCRIPT') return;
+      requestTranscriptFromPage(msg.preferLang).then(sendResponse);
+      return true; // keep the channel open for the async response
+    });
+  }
+
+  function requestTranscriptFromPage(preferLang) {
+    return new Promise((resolve) => {
+      const reqId = 'ais' + Date.now() + Math.random().toString(36).slice(2);
+      const timer = setTimeout(() => { window.removeEventListener('message', onMsg); resolve(null); }, 8000);
+      function onMsg(e) {
+        const d = e.data;
+        if (!d || d.source !== 'ais-main' || d.reqId !== reqId) return;
+        clearTimeout(timer);
+        window.removeEventListener('message', onMsg);
+        resolve(d);
+      }
+      window.addEventListener('message', onMsg);
+      window.postMessage({ source: 'ais-iso', type: 'YT_REQ', reqId, preferLang: preferLang || null }, '*');
+    });
+  }
 
   // ---------- SVG ----------
   function LOGO_SVG(fill) {

@@ -28,16 +28,72 @@ async function fetchWatchPage(videoId) {
   return await r.text();
 }
 
-function extractPlayerResponse(html) {
-  // Try the modern location first.
-  let m = html.match(/var ytInitialPlayerResponse\s*=\s*(\{.+?\})\s*;\s*(?:var|<\/script>)/s);
-  if (!m) m = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\})\s*;/s);
-  if (!m) throw new Error('ytInitialPlayerResponse not found in page');
-  try {
-    return JSON.parse(m[1]);
-  } catch (e) {
-    throw new Error('Failed to parse player response JSON: ' + e.message);
+// Walk a balanced { ... } object starting at the opening brace. Far more
+// reliable than a non-greedy regex, which truncates large/nested JSON.
+function sliceBalancedObject(str, startIdx) {
+  let depth = 0, inStr = false, esc = false;
+  for (let i = startIdx; i < str.length; i++) {
+    const c = str[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+    } else if (c === '"') inStr = true;
+    else if (c === '{') depth++;
+    else if (c === '}') { if (--depth === 0) return str.slice(startIdx, i + 1); }
   }
+  return null;
+}
+
+function extractPlayerResponse(html) {
+  let idx = html.indexOf('ytInitialPlayerResponse');
+  while (idx !== -1) {
+    const brace = html.indexOf('{', idx);
+    if (brace !== -1) {
+      const json = sliceBalancedObject(html, brace);
+      if (json) { try { return JSON.parse(json); } catch (_) { /* try next */ } }
+    }
+    idx = html.indexOf('ytInitialPlayerResponse', idx + 23);
+  }
+  throw new Error('ytInitialPlayerResponse not found in page');
+}
+
+function getCaptionTracks(pr) {
+  return pr
+    && pr.captions
+    && pr.captions.playerCaptionsTracklistRenderer
+    && pr.captions.playerCaptionsTracklistRenderer.captionTracks;
+}
+
+function extractInnertubeKey(html) {
+  const m = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
+  // Public web key embedded in every youtube.com page; stable fallback.
+  return m ? m[1] : 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+}
+
+function extractClientVersion(html) {
+  const m = html.match(/"INNERTUBE_CONTEXT_CLIENT_VERSION":"([^"]+)"/)
+        || html.match(/"clientVersion":"([\d.]+)"/);
+  return m ? m[1] : '2.20240101';
+}
+
+// Captions are frequently absent from the server-rendered HTML (especially
+// auto-generated/ASR tracks). The InnerTube `player` endpoint — the same one the
+// real YouTube player calls — returns the caption track list reliably.
+async function fetchPlayerViaInnertube(videoId, html) {
+  const key = extractInnertubeKey(html);
+  const clientVersion = extractClientVersion(html);
+  const r = await fetch('https://www.youtube.com/youtubei/v1/player?key=' + encodeURIComponent(key), {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      videoId,
+      context: { client: { clientName: 'WEB', clientVersion, hl: 'en' } },
+    }),
+  });
+  if (!r.ok) throw new Error('InnerTube player HTTP ' + r.status);
+  return await r.json();
 }
 
 function pickCaptionTrack(tracks, preferLang) {
@@ -123,11 +179,18 @@ export function transcriptWithTimestamps(segments, stepSec) {
 export async function fetchTranscript(videoId, preferLang) {
   if (!videoId) throw new Error('No videoId');
   const html = await fetchWatchPage(videoId);
-  const pr   = extractPlayerResponse(html);
+  let pr     = extractPlayerResponse(html);
+  let tracks = getCaptionTracks(pr);
 
-  const tracks = pr.captions
-    && pr.captions.playerCaptionsTracklistRenderer
-    && pr.captions.playerCaptionsTracklistRenderer.captionTracks;
+  // Captions are often missing from the server HTML (auto-generated ones in
+  // particular). Fall back to the InnerTube player API, which lists them.
+  if (!tracks || !tracks.length) {
+    try {
+      const pr2 = await fetchPlayerViaInnertube(videoId, html);
+      const t2  = getCaptionTracks(pr2);
+      if (t2 && t2.length) { pr = pr2; tracks = t2; }
+    } catch (_) { /* fall through to NO_CAPTIONS below */ }
+  }
 
   const meta = {
     title:   (pr.videoDetails && pr.videoDetails.title)   || '',

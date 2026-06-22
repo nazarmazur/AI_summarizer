@@ -687,7 +687,34 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
+// Clicking the toolbar icon opens the summarizer in Chrome's docked side panel
+// (instead of a small popup). The side panel works everywhere — web pages,
+// PDFs, and video sites — and stays open beside the content.
+if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+  // ?panel=1 lets popup.js stretch the UI to fill the docked panel.
+  if (chrome.sidePanel.setOptions) {
+    chrome.sidePanel.setOptions({ path: 'popup/popup.html?panel=1', enabled: true }).catch(() => {});
+  }
+}
+
+// When the extension is reloaded/updated, content scripts already running in
+// open tabs become orphaned ("Extension context invalidated"). Re-inject fresh
+// copies into open YouTube tabs so the transcript bridge works without the user
+// having to manually refresh the page.
+async function reinjectYouTubeTabs() {
+  if (!chrome.scripting || !chrome.scripting.executeScript) return;
+  try {
+    const tabs = await chrome.tabs.query({ url: ['*://*.youtube.com/*'] });
+    for (const tab of tabs) {
+      chrome.scripting.executeScript({ target: { tabId: tab.id }, world: 'MAIN', files: ['content/yt-main.js'] }).catch(() => {});
+      chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['lib/i18n.js', 'content/page.js'] }).catch(() => {});
+    }
+  } catch (_) { /* ignore */ }
+}
+
 chrome.runtime.onInstalled.addListener(async (details) => {
+  reinjectYouTubeTabs();
   if (details.reason === 'install') {
     // First-run: open the onboarding wizard.
     chrome.tabs.create({ url: chrome.runtime.getURL('onboarding/onboarding.html') });

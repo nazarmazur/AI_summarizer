@@ -123,6 +123,7 @@
   "loadingSynthesis":   { "message": "Объединяю секции в финальную сводку…" },
   "bannerApiFallback":  { "message": "Не удалось использовать браузерную сессию $PROVIDER$ — переключились на API.", "placeholders": { "provider": { "content": "$1" } } },
   "errorNoTranscript":  { "message": "У этого видео нет субтитров." },
+  "errorCaptionsBlocked": { "message": "YouTube заблокировал доступ к субтитрам этого видео. Попробуйте другое видео, статью или PDF." },
   "errorNoApiKey":      { "message": "Добавьте API-ключ в настройках или выберите Браузерную сессию." },
   "errorAuth":          { "message": "Войдите, чтобы использовать расширение." },
   "errorGeneric":       { "message": "Что-то пошло не так. Попробуйте ещё раз." },
