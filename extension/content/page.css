@@ -37,33 +37,41 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  color: #fff;
+  padding: 10px 14px;
+  /* Clean, theme-adaptive header (follows YouTube light/dark) instead of a
+     heavy purple bar. The whole header is clickable to collapse/expand. */
+  background: var(--yt-spec-base-background, #fff);
+  color: var(--yt-spec-text-primary, #0f0f0f);
+  border-bottom: 1px solid var(--yt-spec-10-percent-layer, #ececec);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color .12s ease;
 }
+.ais-card-head:hover { background: var(--yt-spec-badge-chip-background, #f2f2f2); }
 .ais-card-title {
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
 }
-.ais-card-title svg { width: 16px; height: 16px; }
+.ais-card-title svg { width: 18px; height: 18px; }
 
-.ais-card-actions { display: inline-flex; gap: 6px; }
+.ais-card-actions { display: inline-flex; gap: 4px; }
 .ais-mini {
-  background: rgba(255, 255, 255, .18);
+  background: transparent;
   border: 0;
-  color: #fff;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  color: var(--yt-spec-text-secondary, #606060);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: background-color .12s ease;
 }
-.ais-mini:hover { background: rgba(255, 255, 255, .3); }
+.ais-mini:hover { background: var(--yt-spec-10-percent-layer, rgba(0,0,0,.08)); }
 
 .ais-card-body {
   height: 560px;

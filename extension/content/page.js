@@ -82,7 +82,7 @@
     card.id = CARD_ID;
     card.innerHTML = `
       <div class="ais-card-head">
-        <span class="ais-card-title">${LOGO_SVG()} AI Summarizer</span>
+        <span class="ais-card-title">${LOGO_SVG('#a855f7')} AI Summarizer</span>
         <div class="ais-card-actions">
           <button class="ais-mini" id="ais-card-collapse" title="Collapse">${CARET_UP()}</button>
         </div>
@@ -91,11 +91,15 @@
     card.querySelector('.ais-card-body').appendChild(makeIframe(location.href));
     sidebar.prepend(card);
 
+    // The whole header is the collapse/expand toggle (clicking the caret bubbles
+    // up to it, so a single handler covers both).
+    const head = card.querySelector('.ais-card-head');
     const collapseBtn = card.querySelector('#ais-card-collapse');
-    collapseBtn.addEventListener('click', () => {
+    head.addEventListener('click', () => {
       card.classList.toggle('is-collapsed');
       const collapsed = card.classList.contains('is-collapsed');
       collapseBtn.innerHTML = collapsed ? CARET_DOWN() : CARET_UP();
+      collapseBtn.title = collapsed ? 'Expand' : 'Collapse';
       chrome.storage.local.set({ ais_card_collapsed: collapsed }).catch(() => {});
     });
     chrome.storage.local.get('ais_card_collapsed').then((r) => {
