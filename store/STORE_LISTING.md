@@ -1,126 +1,118 @@
-# Chrome Web Store — Listing Copy
+# Chrome Web Store — Listing Copy (free v1.x build)
+
+> This copy matches the shipped free build: bring-your-own-key, **no account,
+> no subscription, no Pro tier, no pricing**. Do not add billing/sign-in claims
+> unless the build actually ships them.
 
 ## English
 
 ### Short description (≤ 132 chars)
-Summarize any YouTube video, article, or PDF in seconds with Gemini, ChatGPT, or Claude — plus ask follow-up questions.
+Free AI summaries for YouTube, any article, or PDF — with Gemini, GPT, or Claude. Ask smart follow-up questions. Your own key.
 
 ### Detailed description
 
-**AI Summarizer turns any YouTube video, article, or PDF into a clean summary you can read in under a minute. Then you can chat with it.**
+**Smart AI Summarizer turns any YouTube video, article, web page, or PDF into a clean summary in seconds — then lets you ask questions about it. Not just YouTube, and not just one AI.**
 
-✦ **Works everywhere**
- • YouTube, Vimeo, Twitch, TikTok, Instagram, X (Twitter)
- • Any blog or news article — even paywalled ones you already have access to
- • PDFs by URL or file upload (including scans, via Gemini's native vision)
+✦ **Works everywhere — not only YouTube**
+ • YouTube, Vimeo, Twitch, TikTok, Instagram, X
+ • Any blog, news article, or web page
+ • PDFs by URL or file upload (scans too, via Gemini's native vision)
 
-✦ **Pick your AI**
- • Bring your own API key (Gemini, OpenAI, or Anthropic) — unlimited use, you pay only what the provider charges
- • Or use your already-logged-in Gemini, ChatGPT, or Claude tab — no key required
- • Or subscribe to Pro and use our pooled keys with a monthly quota
+✦ **Pick your AI — not just Gemini**
+ • Use your own API key from Google Gemini, OpenAI, or Anthropic
+ • Newest models supported: Gemini 2.5 / 3.x Flash & Pro, GPT-4o / GPT-5 family, Claude Haiku / Sonnet / Opus / Fable
+ • No account and no subscription — you only pay your AI provider for what you use
 
-✦ **Built-in Q&A**
- Ask "what did they say about X?" or "summarise just the second half" — the AI remembers the content you just summarised and answers in context.
+✦ **Docked side panel**
+ Click the toolbar icon and the summarizer opens in a side panel next to the page — summarize while you read or watch.
 
-✦ **Smart for long content**
- 3-hour videos and 200-page PDFs work seamlessly. The extension chunks the content into sections, summarises each in parallel, then weaves it all into one coherent overview.
+✦ **Smart Q&A with suggested questions**
+ After each summary you get a few content-specific starter questions to tap — or ask your own. The AI answers using the exact content you just summarized. Works on videos, articles, and PDFs alike.
 
-✦ **Multilingual**
- Summarize in 8 languages. UI in Ukrainian, Russian, English.
+✦ **Made for long content**
+ Long videos and big PDFs are split into sections, summarized in parallel, then woven into one coherent overview. Clickable timestamps for videos.
+
+✦ **Your way**
+ 35 summary languages · short / medium / long · streaming output · copy or download as Markdown · local history. UI in Ukrainian, Russian, English.
 
 ✦ **Privacy first**
- API keys live in your browser only. We never see what you summarise. No ads, no third-party trackers, no resold data.
+ Your API key is stored only in your browser (chrome.storage.local) and is sent only to the AI provider you chose. No first-party server, no analytics, no trackers, no resold data. The extension reads a page's content only after you ask it to summarize.
 
-✦ **Streaming output**
- Watch the summary appear word-by-word, just like ChatGPT. Hit Stop anytime if you've seen enough.
+### Single-sentence pitch
+A free, bring-your-own-key alternative to Eightify/Glasp that works on videos, articles, and PDFs — with your choice of Gemini, GPT, or Claude — and lets you chat about them.
 
-## Pricing
+### Permissions justification (for store review)
 
-**Free** — unlimited summaries when you provide your own API key, or 5 pooled requests per day on ours.
+| Permission / host | Why we need it |
+|---|---|
+| storage | Save your preferences and your locally-stored API key. |
+| scripting | Inject the "Summarize" button/card and read the current article/PDF page only when you ask for a summary. |
+| tabs | Read the active tab's URL to auto-target the page you're summarizing, and pass the transcript from the open video tab. |
+| activeTab | Access the page you're on when you click the action. |
+| sidePanel | Open the summarizer in Chrome's docked side panel. |
+| host: youtube.com, vimeo.com, twitch.tv, tiktok.com, instagram.com, x.com / twitter.com | Add the summarize UI and read video transcripts/captions on these sites. |
+| host: gemini.google.com, chatgpt.com, claude.ai | Optional "browser-session" mode: drive your already-signed-in AI tab instead of using an API key. |
+| host: generativelanguage.googleapis.com, api.openai.com, api.anthropic.com | Send the content + your prompt directly to the AI provider you selected. |
 
-**Pro — $4.99 / month or $39 / year** — unlocks Gemini 2.5 Pro / GPT-4o / Claude Sonnet, clickable video timestamps, summaries of 30+ min videos, custom prompt templates, Markdown / Notion export, and 50 pooled requests per month.
-
-## Permissions justification (for store review)
-
-| Permission      | Why we need it                                                                 |
-|-----------------|--------------------------------------------------------------------------------|
-| storage         | Save user preferences and locally-stored API keys.                              |
-| identity        | Google sign-in via chrome.identity.launchWebAuthFlow (Supabase auth).           |
-| tabs            | Detect URL of active tab to pre-fill the popup.                                 |
-| activeTab       | Read the URL of the page the user is currently on when they click the action.   |
-| scripting       | Required to inject Summarize button on YouTube and other supported sites.       |
-| host_permissions: youtube.com, vimeo.com, twitch.tv, tiktok.com, instagram.com, x.com, gemini.google.com, chatgpt.com, claude.ai, supabase.co, generativelanguage.googleapis.com, api.openai.com, api.anthropic.com | Fetch transcripts / page content, run browser-session bridges, authenticate users, call AI APIs. |
-| host_permissions: <all_urls> | Required to inject the floating Summarize button on any article or PDF the user wants to summarise. Content is only read after the user clicks the button. |
-
-## Single-sentence pitch
-A modern alternative to Eightify/Glasp that works on videos, articles, and PDFs — and lets you chat about them.
+We do **not** request `<all_urls>`. There is no sign-in, no account, and no payment.
 
 ---
 
 ## Ukrainian / Українська
 
 ### Короткий опис (≤ 132 chars)
-Підсумок будь-якого YouTube-відео, статті чи PDF за секунди через Gemini, ChatGPT або Claude — з функцією чат-питань.
+Безкоштовні AI-підсумки YouTube, статей і PDF — Gemini, GPT чи Claude. Розумні питання. Власний ключ, без акаунта.
 
 ### Детальний опис
 
-**AI Summarizer перетворює будь-яке YouTube-відео, статтю чи PDF на стислий підсумок за хвилину. А потім дозволяє ставити запитання.**
+**Smart AI Summarizer перетворює будь-яке відео, статтю, вебсторінку чи PDF на стислий підсумок за секунди — і дозволяє ставити запитання. Не лише YouTube і не лише один AI.**
 
-✦ **Працює всюди**
- • YouTube, Vimeo, Twitch, TikTok, Instagram, X (Twitter)
- • Будь-який блог чи новинна стаття — навіть за пейволом, якщо у вас вже є доступ
- • PDF за URL або через завантаження файлу (включно зі сканами через Gemini)
+✦ **Працює всюди — не лише YouTube**
+ • YouTube, Vimeo, Twitch, TikTok, Instagram, X
+ • Будь-який блог, новина чи вебсторінка
+ • PDF за URL або файлом (зокрема скани, через Gemini)
 
-✦ **Обирайте свій AI**
- • Свій API ключ (Gemini / OpenAI / Anthropic) — необмежено
- • Або вже залогінена вкладка Gemini / ChatGPT / Claude — без ключа
- • Або підписка Pro з пулом наших ключів
+✦ **Обирайте свій AI — не лише Gemini**
+ • Власний ключ Google Gemini, OpenAI або Anthropic
+ • Найновіші моделі: Gemini 2.5 / 3.x, GPT-4o / GPT-5, Claude Haiku / Sonnet / Opus / Fable
+ • Без акаунта й без підписки — платите лише своєму AI-провайдеру за використання
 
-✦ **Вбудований чат**
- Питайте «що вони сказали про X?» — AI пам'ятає контент, який ви тільки що подивилися.
+✦ **Докована бічна панель**
+ Клік на іконку — і саммарайзер відкривається збоку від сторінки.
 
-✦ **Розумно для довгих відео**
- 3-годинні відео та 200-сторінкові PDF — без проблем. Чанкуємо паралельно і збираємо єдиний підсумок.
+✦ **Розумний чат із підказками-питаннями**
+ Після підсумку — кілька питань саме про цей контент, які можна натиснути, або своє питання. AI відповідає по щойно підсумованому. Працює на відео, статтях і PDF.
 
-✦ **8 мов** для підсумку. Інтерфейс UA/RU/EN.
+✦ **Для довгого контенту**
+ Довгі відео й великі PDF — паралельне підсумовування в один зв'язний огляд. Клікабельні тайм-коди для відео.
+
+✦ **Як зручно вам**
+ 35 мов підсумку · коротко / середньо / довго · стрімінг · копія або завантаження в Markdown · локальна історія. Інтерфейс: UA / RU / EN.
 
 ✦ **Приватність на першому місці**
- API ключі лишаються тільки у вашому браузері. Ми не бачимо що ви підсумовуєте.
-
-✦ **Streaming output**
- Дивитесь як підсумок з'являється посимвольно. Stop коли захочете.
-
-## Тарифи
-
-**Безкоштовно** — необмежено зі своїм ключем, або 5 запитів/день на наших.
-
-**Pro — $4.99/міс або $39/рік** — Gemini 2.5 Pro / GPT-4o / Claude Sonnet, клікабельні тайм-коди, відео 30+ хв, експорт, 50 запитів/міс.
+ Ключ зберігається лише у вашому браузері й надсилається тільки обраному AI-провайдеру. Жодного нашого сервера, аналітики чи трекерів.
 
 ---
 
 ## Russian / Русский
 
 ### Краткое описание (≤ 132 chars)
-Сводка любого YouTube-видео, статьи или PDF за секунды через Gemini, ChatGPT или Claude — плюс чат-вопросы.
+Бесплатные AI-сводки YouTube, статей и PDF — Gemini, GPT или Claude. Умные вопросы. Свой ключ, без аккаунта.
 
 ### Подробное описание
 
-**AI Summarizer превращает любое YouTube-видео, статью или PDF в краткую сводку за минуту. А потом позволяет задавать вопросы.**
+**Smart AI Summarizer превращает любое видео, статью, веб-страницу или PDF в краткую сводку за секунды — и позволяет задавать вопросы. Не только YouTube и не только один AI.**
 
-✦ **Работает везде** — YouTube, Vimeo, Twitch, TikTok, Instagram, X, любые статьи, PDF (URL и файлы).
+✦ **Работает везде — не только YouTube** — YouTube, Vimeo, Twitch, TikTok, Instagram, X, любые статьи и веб-страницы, PDF (URL и файлы).
 
-✦ **Выберите AI** — свой API-ключ (Gemini / OpenAI / Anthropic) — без лимита, либо залогиненная вкладка ИИ-сайта, либо подписка Pro.
+✦ **Выберите AI — не только Gemini** — свой ключ Google Gemini, OpenAI или Anthropic; новейшие модели (Gemini 2.5/3.x, GPT-4o/GPT-5, Claude Haiku/Sonnet/Opus/Fable). Без аккаунта и подписки.
 
-✦ **Чат-вопросы** — спросите «что они сказали о X?» — ИИ помнит контент.
+✦ **Док-панель сбоку** — клик по иконке открывает саммарайзер рядом со страницей.
 
-✦ **Длинные видео** — 3-часовые ролики и 200-страничные PDF обрабатываются параллельно.
+✦ **Умный чат с подсказками** — после сводки несколько вопросов по этому контенту (можно нажать), AI отвечает по содержимому. Видео, статьи и PDF.
 
-✦ **8 языков** сводки. UI на украинском/русском/английском.
+✦ **Для длинного контента** — длинные видео и большие PDF обрабатываются параллельно. Кликабельные тайм-коды.
 
-✦ **Приватность** — ключи только локально, никаких трекеров.
+✦ **Как удобно вам** — 35 языков сводки, короткая/средняя/длинная, стриминг, экспорт в Markdown, локальная история. UI: UA/RU/EN.
 
-## Тарифы
-
-**Бесплатно** — без лимита со своим ключом, или 5 запросов/день на наших.
-
-**Pro — $4.99/мес или $39/год** — топ-модели, тайм-коды, длинные видео, экспорт, 50 запросов/мес.
+✦ **Приватность** — ключ только в вашем браузере, отправляется только выбранному провайдеру. Никакого нашего сервера, аналитики и трекеров.

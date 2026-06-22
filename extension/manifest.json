@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "1.0.19",
-  "version_name": "1.0.19",
+  "version": "1.0.20",
+  "version_name": "1.0.20",
   "default_locale": "uk",
   "author": "m.nazar77",
   "minimum_chrome_version": "124",
@@ -41,7 +41,6 @@
 
   "permissions": [
     "storage",
-    "identity",
     "scripting",
     "tabs",
     "activeTab",
@@ -63,8 +62,7 @@
     "https://claude.ai/*",
     "https://generativelanguage.googleapis.com/*",
     "https://api.openai.com/*",
-    "https://api.anthropic.com/*",
-    "https://*.supabase.co/*"
+    "https://api.anthropic.com/*"
   ],
 
   "content_scripts": [
@@ -132,7 +130,7 @@
   ],
 
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com https://api.openai.com https://api.anthropic.com https://*.youtube.com https://www.youtube.com;"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://api.anthropic.com https://*.youtube.com https://www.youtube.com;"
   },
 
   "commands": {
