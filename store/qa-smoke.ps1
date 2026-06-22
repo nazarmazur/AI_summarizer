@@ -74,12 +74,6 @@ Write-Host "[6] Options"      -ForegroundColor White
 Write-Host "    □ Billing card is HIDDEN (free release mode)"
 Write-Host "    □ Pool source radio is HIDDEN"
 Write-Host "    □ API keys persist after Save"
-Write-Host "    □ Bridge health: Test buttons return OK/Fail"
-Write-Host ""
-Write-Host "[7] Browser mode" -ForegroundColor White
-Write-Host "    □ Sign in to gemini.google.com first"
-Write-Host "    □ Options → switch source to 'Через залогінений браузер'"
-Write-Host "    □ Summary works without your API key"
 Write-Host ""
 Write-Host "[8] Dark mode"    -ForegroundColor White
 Write-Host "    □ Switch YouTube to dark theme"

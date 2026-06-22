@@ -521,6 +521,9 @@ let streamedText = '';          // accumulated text so far
 let streamedMeta = null;        // { videoId, model, provider, title, channel }
 let rerenderScheduled = false;  // microtask batching for renderProgress
 let lastResult = null;          // full result object — used for export
+// Per (source + kind + settings) result cache so toggling Summary ⇄ Timestamps
+// (or back) re-shows the computed result instantly instead of re-running.
+const resultCache = new Map();
 
 function cancelActiveStream() {
   if (activePort) {
@@ -619,6 +622,7 @@ function renderFinal(result, kind) {
 
 let currentSourceKey  = null;
 let currentSourceKind = 'webpage';
+let suggestionsLoadedFor = null;   // source key we've already fetched starter questions for
 let chatStreamingBubble = null;
 let chatActivePort = null;
 
@@ -704,6 +708,10 @@ function sendChatQuestion(question) {
 // suggestions, since ours work on videos, articles and PDFs alike).
 function loadSuggestions() {
   if (!chatSuggest || !currentSourceKey) return;
+  // Starter questions are about the source, not the kind — fetch them once per
+  // source so toggling Summary ⇄ Timestamps doesn't burn extra API calls.
+  if (suggestionsLoadedFor === currentSourceKey) return;
+  suggestionsLoadedFor = currentSourceKey;
   const forKey = currentSourceKey;
   chatSuggest.innerHTML = '';
   chatSuggest.hidden = true;
@@ -714,9 +722,12 @@ function loadSuggestions() {
     language:  settings.language,
     source:    settings.source || 'api',
   }, (resp) => {
-    if (chrome.runtime.lastError) return;
+    if (chrome.runtime.lastError) { if (suggestionsLoadedFor === forKey) suggestionsLoadedFor = null; return; }
     if (forKey !== currentSourceKey) return;               // a newer summary started
-    if (!resp || !resp.ok || !Array.isArray(resp.questions) || !resp.questions.length) return;
+    if (!resp || !resp.ok || !Array.isArray(resp.questions) || !resp.questions.length) {
+      if (suggestionsLoadedFor === forKey) suggestionsLoadedFor = null;   // allow a later retry
+      return;
+    }
     chatSuggest.innerHTML = '';
     resp.questions.forEach((q) => {
       const chip = document.createElement('button');
@@ -753,7 +764,16 @@ chatForm.addEventListener('submit', (e) => {
 // PDF picker state — when user uploads a PDF from disk we cache the bytes here
 let pendingPdf = null;   // { bytes: Uint8Array, name: string }
 
-async function run(kind) {
+function cacheSig(kind) {
+  const srcId = pendingPdf
+    ? ('pdf:' + (pendingPdf.name || '') + ':' + (pendingPdf.bytes ? pendingPdf.bytes.length : 0))
+    : urlInput.value.trim();
+  return [srcId, kind, settings.language, settings.length, settings.model,
+          settings.templateId || 'standard', settings.source || 'api'].join('|');
+}
+
+async function run(kind, opts) {
+  const force = !!(opts && opts.force);
   const url = urlInput.value.trim();
   const det = pendingPdf ? { kind: 'pdf' } : detectKindLocal(url);
   if (det.kind === 'unknown' && !pendingPdf) {
@@ -761,6 +781,20 @@ async function run(kind) {
     return;
   }
   // v1.0.x free build: no sign-in flow exists. BYOK only.
+
+  const runSig = cacheSig(kind);
+
+  // Instant cache hit — toggling Summary ⇄ Timestamps (same source & settings)
+  // re-shows the prior result without re-fetching captions or re-calling the model.
+  if (!force && resultCache.has(runSig)) {
+    const hit = resultCache.get(runSig);
+    cancelActiveStream();
+    fallbackBanner.hidden = true;
+    lastJob = { kind, payload: hit.payload };
+    renderFinal(hit.result, kind);
+    showState('result');
+    return;
+  }
 
   cancelActiveStream();
   streamedText = '';
@@ -841,8 +875,9 @@ async function run(kind) {
       return;
     }
     if (msg.type === 'AIS_DONE') {
+      if (msg.result) resultCache.set(runSig, { result: msg.result, payload });
       renderFinal(msg.result, kind);
-      // Show banner if we fell back to API after a bridge failure.
+      // Show banner if we fell back to the direct API (e.g. pool unavailable).
       if (msg.result && msg.result.via === 'api-fallback') {
         const provName = (msg.result.provider || '').toUpperCase();
         fallbackBanner.textContent =
@@ -864,14 +899,6 @@ async function run(kind) {
           label: t('saveSettings'),
           handler: () => chrome.runtime.sendMessage({ type: 'AIS_OPEN_OPTIONS' }),
         });
-        return;
-      }
-      if (msg.code === 'BRIDGE_NOT_READY' || msg.code === 'BRIDGE_DOWN_NO_API_KEY') {
-        showError(
-          'Login to ' + (msg.provider || '') + ' first, then try again — or add an API key in settings.',
-          { label: 'Open ' + (msg.provider || ''),
-            handler: () => chrome.tabs.create({ url: msg.bridgeUrl || 'https://gemini.google.com/' }) }
-        );
         return;
       }
       // In free release mode we never show the upsell modal — defensively swallow
@@ -949,7 +976,7 @@ tiles.forEach((tile) => {
 });
 
 regenBtn.addEventListener('click', () => {
-  if (lastJob) run(lastJob.kind);
+  if (lastJob) run(lastJob.kind, { force: true });   // bypass cache, recompute fresh
 });
 
 stopBtn.addEventListener('click', () => {

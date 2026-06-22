@@ -2,7 +2,7 @@
 // Release mode controls how much of the extension is exposed to end users.
 //
 //   'free'  — v1 launch:
-//             • BYOK only (user provides their own API key, or uses browser session)
+//             • BYOK only (user provides their own API key)
 //             • No sign-in required, no Pro tier, no Stripe/Paddle
 //             • Local history only (chrome.storage)
 //             • Onboarding hides the Pool option
@@ -119,7 +119,7 @@ export function modelsByProvider() {
 }
 
 export const DEFAULT_SETTINGS = {
-  source: 'api',           // 'api' | 'browser'
+  source: 'api',           // 'api' | 'pool'
   model:  'auto',          // 'auto' | one of MODELS keys
   language: 'auto',        // 'auto' = follow YouTube/system, or 'uk', 'ru', 'en', 'es', 'de', 'fr', 'pl'
   length: 'medium',        // 'short' | 'medium' | 'long'

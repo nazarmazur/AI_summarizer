@@ -32,7 +32,6 @@ The entire pipeline runs in your browser. We don't have a server in the middle o
 - Your selected AI provider, model, language, and length preferences.
 - The API keys you pasted, if any. These keys are stored locally only. We never see them.
 - A per-day counter of how many free-pool requests you've used.
-- Last 24h of bridge-health diagnostics (success / failure of writing into your logged-in Gemini/ChatGPT/Claude tab).
 
 ### On your device (chrome.storage.session — cleared when you quit the browser)
 - For the Q&A follow-up chat: the extracted source content + a few back-and-forth messages for the page you just summarised. Cleared on browser close.
@@ -61,20 +60,19 @@ When you ask for a summary, the page content goes directly from your browser to 
 
 > The free version of the extension has **no billing and no account** — it never contacts Stripe/Paddle/Lemon Squeezy or Supabase. Those rows describe optional features in a future paid release. The full, canonical privacy policy is the hosted [PRIVACY.html](https://nazarmazur.github.io/AI_summarizer/store/PRIVACY.html).
 
-If you use **browser-session mode** instead of an API key, the prompt is typed into your already-logged-in tab on gemini.google.com / chatgpt.com / claude.ai. In that case, it goes to the provider under your own account, exactly as if you had typed it manually.
-
 ## 4. Permissions justification
 
 The extension requests these Chrome permissions:
 
 | Permission      | Why                                                                                  |
 |-----------------|--------------------------------------------------------------------------------------|
-| `storage`       | Save your preferences and API keys locally.                                          |
-| `identity`      | Google SSO login flow via `chrome.identity.launchWebAuthFlow`.                        |
-| `tabs`          | Detect the URL of the active tab so the popup pre-fills.                              |
-| `activeTab`     | Read the current page's URL when you click the toolbar action.                        |
-| `scripting`     | Inject content scripts into supported pages to show the in-page button.               |
-| `<all_urls>`    | Show the floating Summarize button on any article, video, or PDF you open.            |
+| `storage`       | Save your preferences and locally-stored API key.                                    |
+| `scripting`     | Inject the in-page "Summarize" button/card and read the page content only after you ask for a summary. |
+| `tabs`          | Detect the active tab's URL so the panel pre-fills, and read the open video tab's transcript. |
+| `activeTab`     | Access the page you're on when you click the action.                                 |
+| `sidePanel`     | Open the summarizer in Chrome's docked side panel.                                    |
+| host: youtube / vimeo / twitch / tiktok / instagram / x | Add the summarize UI and read video transcripts on these sites. |
+| host: generativelanguage.googleapis.com, api.openai.com, api.anthropic.com | Send content + your prompt to the provider you chose. |
 
 We do **not** read or transmit page content unless you explicitly click Summarize.
 

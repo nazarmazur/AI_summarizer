@@ -3,7 +3,7 @@ import { getSession, signInWithGoogle } from '../lib/supabase.js';
 import { RELEASE_MODE, HAS_SUPABASE, HAS_PRO } from '../lib/config.js';
 
 // In free release mode the Pool option is hidden — we haven't deployed the
-// ai-proxy Edge Function. Users pick API key or browser session only.
+// ai-proxy Edge Function. Users provide their own API key.
 if (!HAS_PRO || !HAS_SUPABASE) {
   document.querySelectorAll('.choice[data-source="pool"]').forEach((el) => { el.hidden = true; });
   // Defensively hide the pool sign-in box too — no sign-up exists in v1 free build.

@@ -51,7 +51,6 @@ A free, bring-your-own-key alternative to Eightify/Glasp that works on videos, a
 | activeTab | Access the page you're on when you click the action. |
 | sidePanel | Open the summarizer in Chrome's docked side panel. |
 | host: youtube.com, vimeo.com, twitch.tv, tiktok.com, instagram.com, x.com / twitter.com | Add the summarize UI and read video transcripts/captions on these sites. |
-| host: gemini.google.com, chatgpt.com, claude.ai | Optional "browser-session" mode: drive your already-signed-in AI tab instead of using an API key. |
 | host: generativelanguage.googleapis.com, api.openai.com, api.anthropic.com | Send the content + your prompt directly to the AI provider you selected. |
 
 We do **not** request `<all_urls>`. There is no sign-in, no account, and no payment.

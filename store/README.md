@@ -53,9 +53,9 @@ Output: `dist/ai-summarizer-1.0.0.zip` — that's what you upload.
 ### 6. Submit for review
 - Save the draft, then click **Submit for review**.
 - Reviews typically take **1-3 days**. Common rejections:
-  - **<all_urls>** permission without strong justification → make sure your description explains the floating Summarize button.
+  - **Broken / misleading functionality** (Red Potassium) → the reviewer must be able to produce a real summary; give a working API key in the reviewer notes (BYOK).
   - Missing privacy disclosure → ensure the policy URL is reachable.
-  - Excessive permissions → trim any you don't actively use.
+  - Excessive permissions → we request only `storage, scripting, tabs, activeTab, sidePanel` + specific hosts; no `<all_urls>`.
 
 ### 7. After approval
 - The extension goes live at `https://chromewebstore.google.com/detail/<id>`.

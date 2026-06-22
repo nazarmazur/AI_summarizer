@@ -1,7 +1,6 @@
 import { getSettings, setSettings, getApiKeys, setApiKeys } from '../lib/ai-api.js';
 import { getSession, signOut } from '../lib/supabase.js';
 import { LANGUAGES, DEFAULT_SETTINGS, SUPABASE_URL, SUPABASE_ANON, BILLING_PROVIDER, RELEASE_MODE, HAS_SUPABASE, HAS_PRO, DONATE } from '../lib/config.js';
-import { getHealth, resetHealth } from '../lib/bridge-health.js';
 import { getTierStatus, invalidateTierCache } from '../lib/tier.js';
 import { PRO_MONTHLY_POOL_LIMIT, FREE_DAILY_POOL_LIMIT } from '../lib/features.js';
 import { BUILTIN_TEMPLATES, getUserTemplates, saveUserTemplate, deleteUserTemplate } from '../lib/templates.js';
@@ -81,71 +80,6 @@ saveBtn.addEventListener('click', saveAll);
 // Sign-in entry was removed in v1.0.x free build — no auth flow exists.
 signInBtn?.addEventListener('click', () => { /* no-op */ });
 signOutBtn?.addEventListener('click', async () => { await signOut(); loadAll(); });
-
-// --------------------------------------------------------------------- bridges
-
-async function paintBridgeStatuses() {
-  const health = await getHealth();
-  document.querySelectorAll('.bridge-row').forEach((row) => {
-    const provider = row.dataset.provider;
-    const statusEl = row.querySelector('[data-status]');
-    const h = health[provider];
-    statusEl.classList.remove('ok', 'fail', 'muted', 'testing');
-    if (!h || (!h.lastOkAt && !h.lastFailAt)) {
-      statusEl.textContent = '—';
-      return;
-    }
-    if (h.mutedUntil && h.mutedUntil > Date.now()) {
-      statusEl.textContent = t('bridgeMuted');
-      statusEl.classList.add('muted');
-      statusEl.title = h.lastErr || '';
-      return;
-    }
-    if (h.lastOkAt && h.lastOkAt >= (h.lastFailAt || 0)) {
-      statusEl.textContent = t('bridgeOk');
-      statusEl.classList.add('ok');
-      statusEl.title = '';
-    } else {
-      statusEl.textContent = t('bridgeFail');
-      statusEl.classList.add('fail');
-      statusEl.title = h.lastErr || '';
-    }
-  });
-}
-
-document.querySelectorAll('.bridge-row [data-test]').forEach((btn) => {
-  btn.addEventListener('click', async () => {
-    const row = btn.closest('.bridge-row');
-    const provider = row.dataset.provider;
-    const statusEl = row.querySelector('[data-status]');
-    statusEl.classList.remove('ok', 'fail', 'muted');
-    statusEl.classList.add('testing');
-    statusEl.textContent = t('testing');
-    btn.disabled = true;
-    // Reset mute so this run isn't auto-skipped by the orchestrator.
-    await resetHealth(provider);
-    try {
-      const resp = await new Promise((resolve) => {
-        chrome.runtime.sendMessage({ type: 'AIS_TEST_BRIDGE', provider }, (r) => {
-          if (chrome.runtime.lastError) return resolve({ ok: false, error: chrome.runtime.lastError.message });
-          resolve(r || { ok: false, error: 'no response' });
-        });
-      });
-      statusEl.classList.remove('testing');
-      if (resp.ok) {
-        statusEl.textContent = t('bridgeOk');
-        statusEl.classList.add('ok');
-        statusEl.title = (resp.sample || '');
-      } else {
-        statusEl.textContent = t('bridgeFail');
-        statusEl.classList.add('fail');
-        statusEl.title = resp.error || '';
-      }
-    } finally {
-      btn.disabled = false;
-    }
-  });
-});
 
 // --------------------------------------------------------------------- billing
 
@@ -438,7 +372,6 @@ function setupDonate() {
 
 fillLanguageOptions();
 loadAll();
-paintBridgeStatuses();
 applyReleaseGates();
 if (HAS_PRO) paintBilling();
 paintTemplates();
@@ -457,9 +390,10 @@ if (new URLSearchParams(location.search).has('billing')) {
   invalidateTierCache().then(paintBilling);
 }
 
-// Welcome flow: if opened with ?welcome=1 just after install, scroll the keys section into view.
+// Welcome flow: if opened with ?welcome=1 just after install, scroll the API
+// keys section (4th card) into view.
 if (new URLSearchParams(location.search).has('welcome')) {
   setTimeout(() => {
-    document.querySelector('.card:nth-of-type(3)')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelector('.card:nth-of-type(4)')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 300);
 }

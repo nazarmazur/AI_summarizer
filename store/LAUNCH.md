@@ -57,7 +57,6 @@
 - [ ] **Протестовано підсумок статті (theverge.com)**
 - [ ] **Протестовано PDF з URL (arxiv.org/pdf/...)**
 - [ ] **Протестовано Q&A після підсумку**
-- [ ] **Протестовано browser-session mode (gemini.google.com)**
 - [ ] **Протестовано історію (відкривається, видаляється)**
 - [ ] **Перевірено dark mode на dark YouTube**
 
@@ -91,17 +90,9 @@
 
 ## 🎯 Що сказати модераторам у відповідь на типові питання
 
-### "Why do you need `<all_urls>` permission?"
-
-> The extension adds a floating "Summarize" button to article and PDF pages so the user can summarize the page they're reading. Without `<all_urls>` we'd be limited to a small fixed list of sites (YouTube, Vimeo), which would defeat the core "summarize anything on the web" value prop. The button only injects the UI — page content is never read or transmitted until the user explicitly clicks Summarize.
-
 ### "Do you collect user data?"
 
 > No. v1.0.0 has no backend. API keys are stored locally in `chrome.storage.local` and only sent to the AI provider the user selected (Google Gemini / OpenAI / Anthropic). No analytics, no third-party trackers, no server we operate. See Privacy Policy.
-
-### "Why do you need `host_permissions` for gemini.google.com / chatgpt.com / claude.ai?"
-
-> These hosts are used by the optional "browser session" mode — the extension can drive the user's already-signed-in tab on any of the three AI sites instead of using an API key. We never read anything on those tabs unless the user has selected that mode in settings and clicks Summarize.
 
 ### "Single purpose violation?"
 
@@ -163,8 +154,7 @@
 ## 🆘 Якщо щось пішло не так
 
 **Rejection: "Excessive permissions"**
-- Поясніть `<all_urls>` як floating button injection (див. вище).
-- Якщо не приймуть — стиснемо до конкретних доменів (~50 популярних сайтів).
+- Усі дозволи мінімальні: `storage, scripting, tabs, activeTab, sidePanel` + конкретні хости відео-сайтів і трьох AI-API. `<all_urls>` НЕ запитується — покажіть рев'юеру таблицю дозволів зі STORE_LISTING.md.
 
 **Rejection: "Missing privacy disclosure"**
 - Перевірте чи Privacy Policy URL відкривається у incognito.

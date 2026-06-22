@@ -179,7 +179,6 @@
       <li>Your selected AI provider, model, language, length, and other preferences.</li>
       <li>The API keys you pasted, if any. Stored locally only. We never see them.</li>
       <li>Your last 50 summaries (local history). Editable, deletable.</li>
-      <li>Bridge-health diagnostics (success/failure of writing into your logged-in AI tab).</li>
     </ul>
 
     <h3>On your device (chrome.storage.session — cleared when you quit the browser)</h3>
@@ -212,18 +211,17 @@
       </tbody>
     </table>
 
-    <p>If you use <strong>browser-session mode</strong> instead of an API key, the prompt is typed into your already-logged-in tab on <code>gemini.google.com</code> / <code>chatgpt.com</code> / <code>claude.ai</code>. In that case the prompt goes to the provider under your own account, exactly as if you had typed it manually.</p>
-
     <h2>4. Permissions justification</h2>
     <table>
       <thead><tr><th>Permission</th><th>Why</th></tr></thead>
       <tbody>
-        <tr><td><code>storage</code></td><td>Save preferences and API keys locally.</td></tr>
-        <tr><td><code>identity</code></td><td>Google SSO via <code>chrome.identity.launchWebAuthFlow</code> (only used in the Pro/sign-in flow).</td></tr>
-        <tr><td><code>tabs</code></td><td>Detect the URL of the active tab so the popup pre-fills.</td></tr>
-        <tr><td><code>activeTab</code></td><td>Read the current page's URL when you click the toolbar action.</td></tr>
-        <tr><td><code>scripting</code></td><td>Inject content scripts on supported pages to show the in-page button.</td></tr>
-        <tr><td><code>&lt;all_urls&gt;</code></td><td>Show the floating Summarize button on any article, video, or PDF you open. Page content is read <strong>only after</strong> you click Summarize.</td></tr>
+        <tr><td><code>storage</code></td><td>Save your preferences and locally-stored API key.</td></tr>
+        <tr><td><code>scripting</code></td><td>Inject the in-page "Summarize" button/card and read the current page's content — only after you ask for a summary.</td></tr>
+        <tr><td><code>tabs</code></td><td>Detect the active tab's URL so the panel pre-fills, and read the open video tab's transcript.</td></tr>
+        <tr><td><code>activeTab</code></td><td>Access the page you're on when you click the action.</td></tr>
+        <tr><td><code>sidePanel</code></td><td>Open the summarizer in Chrome's docked side panel.</td></tr>
+        <tr><td>host: youtube.com, vimeo.com, twitch.tv, tiktok.com, instagram.com, x.com / twitter.com</td><td>Add the summarize UI and read video transcripts/captions on these sites.</td></tr>
+        <tr><td>host: generativelanguage.googleapis.com, api.openai.com, api.anthropic.com</td><td>Send the content + your prompt directly to the AI provider you selected.</td></tr>
       </tbody>
     </table>
 
