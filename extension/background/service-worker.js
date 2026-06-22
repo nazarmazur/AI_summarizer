@@ -13,6 +13,7 @@ import {
   buildChunkSummaryPrompt, buildChunkTimestampsPrompt,
   buildFinalSummaryPrompt, buildFinalTimestampsPrompt,
   buildChatSystemPrompt, buildChatTurnPrompt,
+  buildSuggestQuestionsPrompt,
 } from '../lib/prompts.js';
 import { saveContext, getContext, appendMessage, sourceKeyFromResult } from '../lib/chat-store.js';
 import { getTemplate, applyTemplate, BUILTIN_TEMPLATES } from '../lib/templates.js';
@@ -668,6 +669,40 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     chrome.runtime.openOptionsPage();
     sendResponse({ ok: true });
     return false;
+  }
+
+  // Suggest a few content-specific starter questions for the Q&A chat.
+  if (msg.type === 'AIS_SUGGEST') {
+    (async () => {
+      try {
+        const ctx = await getContext(msg.sourceKey);
+        if (!ctx) { sendResponse({ ok: false }); return; }
+        const keys = await getApiKeys();
+        const chosen = pickProviderFromKey(msg.modelKey, keys);
+        const prompt = buildSuggestQuestionsPrompt({
+          title:    ctx.title,
+          content:  ctx.content,
+          summary:  ctx.summary,
+          language: msg.language || 'auto',
+        });
+        // Don't drive the browser bridge for a background suggestion — use the
+        // API/pool path (falls back gracefully to nothing if no key).
+        const suggestSource = msg.source === 'browser' ? 'api' : (msg.source || 'api');
+        const { text } = await complete({
+          prompt, source: suggestSource, modelKey: msg.modelKey,
+          provider: chosen.provider, keys, onDelta: null, allowFallback: true,
+        });
+        const questions = String(text || '')
+          .split('\n')
+          .map((l) => l.replace(/^\s*[\d.)\-*•]+\s*/, '').replace(/^["'“]+|["'”]+$/g, '').trim())
+          .filter((l) => l.length > 3 && l.length < 140)
+          .slice(0, 5);
+        sendResponse({ ok: true, questions });
+      } catch (e) {
+        sendResponse({ ok: false, error: e.message });
+      }
+    })();
+    return true;
   }
 
   if (msg.type === 'AIS_TEST_BRIDGE') {

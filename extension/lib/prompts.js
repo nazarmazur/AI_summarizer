@@ -214,6 +214,27 @@ export function buildChatTurnPrompt({ systemPrompt, history, question }) {
   return parts.join('\n\n');
 }
 
+// Suggest a few content-specific starter questions for the Q&A chat.
+export function buildSuggestQuestionsPrompt({ title, content, summary, language }) {
+  const lang = (!language || language === 'auto') ? 'the same language as the content' : language;
+  return [
+    `Based on the content below${title ? ` ("${title}")` : ''}, suggest exactly 5 short, specific questions a curious viewer would want answered.`,
+    `Rules:`,
+    `- Each question must be answerable from this content.`,
+    `- Under 12 words each. Make them genuinely interesting, not generic.`,
+    `- Write them in ${lang}.`,
+    `- Output ONLY the 5 questions, one per line, with NO numbering, bullets, quotes, or extra text.`,
+    ``,
+    `Summary:`,
+    (summary || '').slice(0, 1500),
+    ``,
+    `Content excerpt:`,
+    `"""`,
+    (content || '').slice(0, 4000),
+    `"""`,
+  ].join('\n');
+}
+
 // ---------------------------------------------------------------------------
 // Map step: summarise one chunk of a long transcript.
 // We deliberately ask for English notes here regardless of the user's target

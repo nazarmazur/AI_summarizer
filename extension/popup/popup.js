@@ -65,6 +65,7 @@ const chatHistory   = $('chatHistory');
 const chatForm      = $('chatForm');
 const chatInput     = $('chatInput');
 const chatSendBtn   = $('chatSendBtn');
+const chatSuggest   = $('chatSuggestions');
 
 // --------------------------------------------------------------------- state
 let settings = { ...DEFAULT_SETTINGS };
@@ -608,6 +609,7 @@ function renderFinal(result, kind) {
     chatInput.value = '';
     chatInput.disabled = false;
     chatSendBtn.disabled = false;
+    loadSuggestions();
   } else {
     chatBox.hidden = true;
   }
@@ -694,6 +696,41 @@ function sendChatQuestion(question) {
     language:    settings.language,
     modelKey:    settings.model,
     source:      settings.source || 'api',
+  });
+}
+
+// Ask the model for a few content-specific starter questions and show them as
+// clickable chips above the chat (mirrors — and beats — YouTube's native
+// suggestions, since ours work on videos, articles and PDFs alike).
+function loadSuggestions() {
+  if (!chatSuggest || !currentSourceKey) return;
+  const forKey = currentSourceKey;
+  chatSuggest.innerHTML = '';
+  chatSuggest.hidden = true;
+  chrome.runtime.sendMessage({
+    type:      'AIS_SUGGEST',
+    sourceKey: currentSourceKey,
+    modelKey:  settings.model,
+    language:  settings.language,
+    source:    settings.source || 'api',
+  }, (resp) => {
+    if (chrome.runtime.lastError) return;
+    if (forKey !== currentSourceKey) return;               // a newer summary started
+    if (!resp || !resp.ok || !Array.isArray(resp.questions) || !resp.questions.length) return;
+    chatSuggest.innerHTML = '';
+    resp.questions.forEach((q) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'suggest-chip';
+      chip.textContent = q;
+      chip.addEventListener('click', () => {
+        if (chatActivePort) return;
+        chatSuggest.hidden = true;
+        sendChatQuestion(q);
+      });
+      chatSuggest.appendChild(chip);
+    });
+    chatSuggest.hidden = false;
   });
 }
 

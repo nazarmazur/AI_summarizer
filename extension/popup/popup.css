@@ -489,6 +489,31 @@ body.dark .ts-pill:hover { background: #3a3548; color: #c4b5fd; }
 body.dark .bubble.assistant { background: #2a2538; color: var(--text); }
 body.dark .bubble.assistant.markdown code { background: #1a1a25; }
 
+/* Suggested starter questions */
+.chat-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.chat-suggest:empty { display: none; }
+.suggest-chip {
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.3;
+  text-align: left;
+  padding: 7px 11px;
+  border: 1px solid var(--border, #ececf2);
+  border-radius: 14px;
+  background: var(--surface, #fff);
+  color: var(--text, #1a1a1f);
+  cursor: pointer;
+  transition: background-color .12s ease, border-color .12s ease;
+}
+.suggest-chip:hover { background: #f5f3ff; border-color: #c9bdf5; }
+body.dark .suggest-chip { background: #1f1f1f; border-color: #2a2a2a; color: #f1f1f1; }
+body.dark .suggest-chip:hover { background: #2a2a2a; border-color: #3a3a44; }
+
 .chat-form {
   display: flex;
   gap: 6px;
