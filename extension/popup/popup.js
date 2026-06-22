@@ -901,6 +901,14 @@ async function run(kind, opts) {
         });
         return;
       }
+      if (msg.code === 'BRIDGE_NOT_READY' || msg.code === 'BRIDGE_DOWN_NO_API_KEY') {
+        showError(
+          'Login to ' + (msg.provider || '') + ' first, then try again — or add an API key in settings.',
+          { label: 'Open ' + (msg.provider || ''),
+            handler: () => chrome.tabs.create({ url: msg.bridgeUrl || 'https://gemini.google.com/' }) }
+        );
+        return;
+      }
       // In free release mode we never show the upsell modal — defensively swallow
       // Pro-tier errors and show a generic message instead (shouldn't happen since
       // the service worker also short-circuits these checks in free mode).

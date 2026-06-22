@@ -290,6 +290,32 @@ html, body {
   white-space: nowrap;
 }
 
+.bridge-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.bridge-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafaff;
+}
+.bridge-name { font-weight: 500; }
+.bridge-status {
+  font-size: 13px;
+  color: var(--text-mute);
+}
+.bridge-status.ok    { color: #15803d; font-weight: 500; }
+.bridge-status.fail  { color: #b91c1c; font-weight: 500; }
+.bridge-status.muted { color: #b45309; font-weight: 500; }
+.bridge-status.testing { color: var(--accent); }
+
 .footer-row {
   display: flex;
   align-items: center;

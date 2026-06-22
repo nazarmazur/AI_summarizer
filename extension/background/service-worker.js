@@ -1,9 +1,10 @@
 // Central coordinator. Receives streaming requests from popup, fetches the
-// YouTube transcript / page content, builds the prompt, and sends it directly
-// to the chosen provider's REST API (Gemini / OpenAI / Anthropic) with the
-// user's own key. For long transcripts (≥ CHUNK_THRESHOLD chars) we run a
-// map-reduce pass: each chunk gets a quick summary, then a final synthesis
-// produces the user-facing output.
+// YouTube transcript, builds the prompt, and routes it through:
+//   • API mode             — directly to Gemini / OpenAI / Anthropic REST
+//   • Browser-session mode — open the AI site and drive its UI
+// For long transcripts (≥ CHUNK_THRESHOLD chars) we run a map-reduce pass:
+// each chunk gets a quick summary, then a final synthesis produces the user-
+// facing output. Browser bridges that fail get auto-fallback to API.
 
 import { extract as runExtract, detectKind } from '../lib/extractors/index.js';
 import {
@@ -45,12 +46,94 @@ import { getSession } from '../lib/supabase.js';
 import { SUPABASE_URL, SUPABASE_ANON, RELEASE_MODE, HAS_SUPABASE, HAS_PRO } from '../lib/config.js';
 import { saveResult as saveLocalHistory } from '../lib/history-store.js';
 import { chunkText, mapWithConcurrency } from '../lib/chunker.js';
+import { isMuted, recordSuccess, recordFailure } from '../lib/bridge-health.js';
 import { getTierStatus, bumpDayUsage, getDayUsage } from '../lib/tier.js';
 import { FEATURES, canUse, isProModel, FREE_DAILY_POOL_LIMIT, FREE_MAX_VIDEO_SECONDS, PRO_MONTHLY_POOL_LIMIT } from '../lib/features.js';
 
+const BRIDGE_URL = {
+  gemini:    'https://gemini.google.com/app',
+  openai:    'https://chatgpt.com/',
+  anthropic: 'https://claude.ai/new',
+};
 const CHUNK_THRESHOLD = 45_000;   // chars; below this we go single-shot
 const CHUNK_TARGET    = 25_000;   // chars per chunk for map-reduce
 const CHUNK_CONCURRENCY = 3;      // parallel chunk requests
+
+// ---------------------------------------------------------------------------
+// Browser-session bridge
+// ---------------------------------------------------------------------------
+
+async function findOrOpenBridgeTab(provider) {
+  const matchUrl = BRIDGE_URL[provider];
+  if (!matchUrl) throw new Error('Unknown provider: ' + provider);
+  const host = new URL(matchUrl).host;
+  const tabs = await chrome.tabs.query({ url: `https://${host}/*` });
+  if (tabs && tabs.length) return { tab: tabs[0], opened: false };
+  const tab = await chrome.tabs.create({ url: matchUrl, active: false });
+  return { tab, opened: true };
+}
+
+async function pingBridge(tabId, provider) {
+  return await new Promise((resolve) => {
+    try {
+      chrome.tabs.sendMessage(tabId, { type: 'BRIDGE_PING', provider }, (resp) => {
+        if (chrome.runtime.lastError) return resolve(null);
+        resolve(resp);
+      });
+    } catch (_) { resolve(null); }
+  });
+}
+
+async function waitBridgeReady(tabId, provider, timeoutMs) {
+  const deadline = Date.now() + (timeoutMs || 30000);
+  while (Date.now() < deadline) {
+    const r = await pingBridge(tabId, provider);
+    if (r && r.ready) return true;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
+}
+
+async function runBridge(provider, prompt) {
+  const { tab, opened } = await findOrOpenBridgeTab(provider);
+
+  await new Promise((resolve) => {
+    function check() {
+      chrome.tabs.get(tab.id, (t) => {
+        if (chrome.runtime.lastError) return resolve();
+        if (t && t.status === 'complete') resolve();
+        else setTimeout(check, 400);
+      });
+    }
+    check();
+  });
+
+  const ready = await waitBridgeReady(tab.id, provider, 30000);
+  if (!ready) {
+    if (opened) chrome.tabs.remove(tab.id).catch(() => {});
+    const err = new Error('BRIDGE_NOT_READY');
+    err.code = 'BRIDGE_NOT_READY';
+    err.provider = provider;
+    err.bridgeUrl = BRIDGE_URL[provider];
+    throw err;
+  }
+
+  const resp = await new Promise((resolve) => {
+    chrome.tabs.sendMessage(tab.id, { type: 'BRIDGE_RUN', provider, prompt }, (r) => {
+      if (chrome.runtime.lastError) return resolve({ ok: false, error: chrome.runtime.lastError.message });
+      resolve(r);
+    });
+  });
+
+  if (opened) chrome.tabs.remove(tab.id).catch(() => {});
+  if (!resp || !resp.ok) {
+    const err = new Error((resp && resp.error) || 'Bridge failed');
+    err.code = 'BRIDGE_FAILED';
+    err.provider = provider;
+    throw err;
+  }
+  return resp.text;
+}
 
 // ---------------------------------------------------------------------------
 // Single completion (used for chunk-summaries and for the final reduce step)
@@ -73,7 +156,8 @@ async function complete({ prompt, source, modelKey, provider, keys, onDelta, all
     }
   }
 
-  // Attachments (PDF inline) need direct API access.
+  // Attachments (PDF inline) can't go through the browser bridge — they need
+  // direct API access. Force the API path silently.
   if (attachments && attachments.length) {
     if (!pickKeyForProvider(provider, keys)) {
       const err = new Error('NO_API_KEY:' + provider);
@@ -81,6 +165,28 @@ async function complete({ prompt, source, modelKey, provider, keys, onDelta, all
     }
     const text = await generateStream(prompt, modelKey, onDelta, { attachments });
     return { text, via: 'api' };
+  }
+
+  if (source === 'browser') {
+    const muted = await isMuted(provider);
+    if (!muted) {
+      try {
+        const text = await runBridge(provider, prompt);
+        await recordSuccess(provider);
+        if (onDelta) onDelta(text);
+        return { text, via: 'browser' };
+      } catch (e) {
+        await recordFailure(provider, e);
+        if (!allowFallback) throw e;
+      }
+    }
+    const fbKey = pickKeyForProvider(provider, keys) || anyKey(keys);
+    if (!fbKey) {
+      const err = new Error('BRIDGE_DOWN_NO_API_KEY');
+      err.code = 'BRIDGE_DOWN_NO_API_KEY'; err.provider = provider; throw err;
+    }
+    const text = await generateStream(prompt, modelKey, onDelta);
+    return { text, via: 'api-fallback' };
   }
 
   if (!pickKeyForProvider(provider, keys)) {
@@ -96,6 +202,7 @@ function pickKeyForProvider(provider, keys) {
   if (provider === 'anthropic') return keys.anthropic;
   return keys.gemini;
 }
+function anyKey(keys) { return keys.gemini || keys.openai || keys.anthropic; }
 
 // ---------------------------------------------------------------------------
 // Map-reduce summary
@@ -252,7 +359,7 @@ async function runJobStream(payload, hooks) {
     });
     const r = await complete({
       prompt, source, modelKey: resolvedModelKey, provider: chosen.provider, keys,
-      onDelta, allowFallback: false,             // attachments require direct API
+      onDelta, allowFallback: false,             // attachments can't fall back to bridge
       attachments: sourceObj.attachments,
     });
     text = r.text; via = r.via;
@@ -442,6 +549,7 @@ chrome.runtime.onConnect.addListener((port) => {
           error: e.message,
           code: e.code,
           provider: e.provider,
+          bridgeUrl: e.bridgeUrl,
         });
       } finally {
         try { port.disconnect(); } catch (_) {}
@@ -577,8 +685,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           summary:  ctx.summary,
           language: msg.language || 'auto',
         });
-        // Background suggestion uses the API/pool path (no key → no suggestions).
-        const suggestSource = msg.source || 'api';
+        // Don't drive the browser bridge for a background suggestion — use the
+        // API/pool path (falls back gracefully to nothing if no key).
+        const suggestSource = msg.source === 'browser' ? 'api' : (msg.source || 'api');
         const { text } = await complete({
           prompt, source: suggestSource, modelKey: msg.modelKey,
           provider: chosen.provider, keys, onDelta: null, allowFallback: true,
@@ -596,6 +705,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  if (msg.type === 'AIS_TEST_BRIDGE') {
+    (async () => {
+      try {
+        const text = await runBridge(msg.provider, 'Reply with exactly: "OK".');
+        const ok = /\bOK\b/i.test(text);
+        if (ok) await recordSuccess(msg.provider);
+        else    await recordFailure(msg.provider, new Error('unexpected reply: ' + (text || '').slice(0, 80)));
+        sendResponse({ ok, sample: (text || '').slice(0, 120) });
+      } catch (e) {
+        await recordFailure(msg.provider, e);
+        sendResponse({ ok: false, error: e.message });
+      }
+    })();
+    return true;
+  }
 });
 
 // Clicking the toolbar icon opens the summarizer in Chrome's docked side panel

@@ -69,6 +69,13 @@
           <p class="muted small radio-sub" data-i18n="sourcePoolHint">No key needed. 25/month on Free, 50/month on Pro.</p>
         </div>
       </label>
+      <label class="radio">
+        <input type="radio" name="source" value="browser" />
+        <div>
+          <span data-i18n="sourceBrowser">Via signed-in browser tab</span>
+          <p class="muted small radio-sub" data-i18n="sourceBrowserHint">Uses your already-open Gemini / ChatGPT / Claude session.</p>
+        </div>
+      </label>
     </section>
 
     <!-- API KEYS -->
@@ -151,6 +158,30 @@
         <div class="row">
           <button class="btn btn-primary" id="tplSaveBtn" data-i18n="saveSettings">Зберегти</button>
           <button class="btn btn-ghost" id="tplCancelBtn" data-i18n="btnNotNow">Скасувати</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BRIDGE HEALTH -->
+    <section class="card">
+      <h2 data-i18n="optionsBridges">Browser-bridge check</h2>
+      <p class="muted small" data-i18n="optionsBridgesHint"></p>
+
+      <div class="bridge-grid">
+        <div class="bridge-row" data-provider="gemini">
+          <span class="bridge-name">Gemini</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="openai">
+          <span class="bridge-name">ChatGPT</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="anthropic">
+          <span class="bridge-name">Claude</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
         </div>
       </div>
     </section>

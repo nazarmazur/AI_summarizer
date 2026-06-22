@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "1.0.25",
-  "version_name": "1.0.25",
+  "version": "1.1.0",
+  "version_name": "1.1.0",
   "default_locale": "uk",
   "author": "m.nazar77",
   "minimum_chrome_version": "124",
@@ -56,6 +56,10 @@
     "https://*.instagram.com/*",
     "https://*.x.com/*",
     "https://*.twitter.com/*",
+    "https://gemini.google.com/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*",
     "https://generativelanguage.googleapis.com/*",
     "https://api.openai.com/*",
     "https://api.anthropic.com/*"
@@ -81,6 +85,21 @@
       ],
       "js": ["lib/i18n.js", "content/page.js"],
       "css": ["content/page.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["content/bridges/gemini-bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["content/bridges/chatgpt-bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content/bridges/claude-bridge.js"],
       "run_at": "document_idle"
     }
   ],
