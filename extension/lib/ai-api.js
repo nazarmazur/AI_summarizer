@@ -55,12 +55,15 @@ async function* iterSSE(response) {
     buf += decoder.decode(value, { stream: true });
     // SSE events are separated by blank lines. Within an event each line may
     // be `data: …`, `event: …`, etc. We yield the concatenated `data:` payload.
-    let idx;
-    while ((idx = buf.indexOf('\n\n')) !== -1) {
-      const eventBlock = buf.slice(0, idx);
-      buf = buf.slice(idx + 2);
+    // Events are separated by a blank line. Gemini sends CRLF (\r\n\r\n) and
+    // OpenAI/Anthropic send LF (\n\n) — handle all variants, or we'd parse zero
+    // events and the stream would look empty ("returned no text").
+    let m;
+    while ((m = /\r\n\r\n|\n\n|\r\r/.exec(buf))) {
+      const eventBlock = buf.slice(0, m.index);
+      buf = buf.slice(m.index + m[0].length);
       const dataLines = [];
-      for (const line of eventBlock.split('\n')) {
+      for (const line of eventBlock.split(/\r\n|\n|\r/)) {
         if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart());
       }
       if (dataLines.length) yield dataLines.join('\n');
@@ -106,6 +109,14 @@ async function streamGemini({ apiKey, model, prompt, onDelta, attachments }) {
   const body = {
     contents: [{ role: 'user', parts }],
     generationConfig: { temperature: 0.4 },
+    // Summarizing is not generating — don't let Gemini's default safety filters
+    // return an empty response on edgy/political/news content the user is reading.
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
   };
 
   async function callModel(modelId) {
