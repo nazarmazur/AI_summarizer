@@ -39,6 +39,19 @@
     iframe.addEventListener('load', () => postTheme(iframe));
     new MutationObserver(() => postTheme(iframe))
       .observe(document.documentElement, { attributes: true, attributeFilter: ['dark', 'class', 'data-theme'] });
+    // Auto-size the embedding card/panel to the popup's reported content height
+    // so an empty or short panel doesn't reserve a tall blank area.
+    window.addEventListener('message', (e) => {
+      if (e.source !== iframe.contentWindow || !e.data || e.data.type !== 'AIS_HEIGHT') return;
+      const body = iframe.closest('.ais-card-body');
+      if (!body) return;
+      const vh = window.innerHeight || 800;
+      if (body.closest('#ais-floating-panel')) {
+        iframe.style.height = Math.max(160, Math.min(e.data.height || 0, Math.round(vh * 0.62))) + 'px';
+      } else {
+        body.style.setProperty('--ais-body-h', Math.max(140, Math.min(e.data.height || 0, Math.round(vh * 0.8))) + 'px');
+      }
+    });
     return iframe;
   }
 

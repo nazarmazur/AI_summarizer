@@ -1176,6 +1176,24 @@ urlInput.addEventListener('focus', () => {
 
 // --------------------------------------------------------------------- init
 
+// When embedded as an iframe (YouTube card / floating panel), report our content
+// height to the parent so it can size the panel to fit — compact when empty,
+// taller once a summary renders — instead of a fixed 560px with blank space.
+function reportHeightToParent() {
+  if (window === window.top) return;     // only inside an embedding iframe
+  let last = 0;
+  const post = () => {
+    const h = Math.ceil(document.documentElement.scrollHeight);
+    if (h && Math.abs(h - last) > 2) {
+      last = h;
+      try { window.parent.postMessage({ type: 'AIS_HEIGHT', height: h }, '*'); } catch (_) {}
+    }
+  };
+  try { new ResizeObserver(post).observe(document.documentElement); } catch (_) {}
+  window.addEventListener('load', post);
+  post();
+}
+
 function detectEmbedContext() {
   const isEmbed = window !== window.top;
   // The side panel loads popup.html?panel=1 — stretch to fill the panel width,
@@ -1183,6 +1201,7 @@ function detectEmbedContext() {
   const isPanel = new URLSearchParams(location.search).get('panel') === '1';
   if (isEmbed || isPanel) document.body.classList.add('embed');
   if (isPanel) document.body.classList.add('sidepanel');
+  if (isEmbed) reportHeightToParent();
 }
 
 function listenForThemeMessages() {

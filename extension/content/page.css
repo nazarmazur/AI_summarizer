@@ -74,7 +74,7 @@
 .ais-mini:hover { background: var(--yt-spec-10-percent-layer, rgba(0,0,0,.08)); }
 
 .ais-card-body {
-  height: 560px;
+  height: var(--ais-body-h, 560px);
   transition: height .2s ease;
   overflow: hidden;
 }
