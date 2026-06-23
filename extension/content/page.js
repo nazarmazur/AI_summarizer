@@ -277,7 +277,9 @@
   function requestTranscriptFromPage(preferLang) {
     return new Promise((resolve) => {
       const reqId = 'ais' + Date.now() + Math.random().toString(36).slice(2);
-      const timer = setTimeout(() => { window.removeEventListener('message', onMsg); resolve(null); }, 8000);
+      // Must exceed yt-main captureViaPlayer's own 9s wait, or the relay gives
+      // up first and a slow-but-successful capture is reported as "no captions".
+      const timer = setTimeout(() => { window.removeEventListener('message', onMsg); resolve(null); }, 12000);
       function onMsg(e) {
         const d = e.data;
         if (!d || d.source !== 'ais-main' || d.reqId !== reqId) return;
