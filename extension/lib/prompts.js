@@ -17,9 +17,9 @@ const LANG_NAME = {
 };
 
 const LENGTH_DESCR = {
-  short:  '4-6 bullet points. Each starts with a **bold** title phrase (3-7 words), then a one-sentence explanation. Target ~120 words total. No preamble.',
-  medium: 'Optional 1-line intro, then 6-10 bullet points. Each starts with a **bold** title phrase (3-7 words), then a 1-2 sentence explanation. ~300 words.',
-  long:   'Short intro paragraph, then sections with ## headings. Under each section, bullet points starting with a **bold** title phrase and 1-3 sentences of detail. End with "## Key takeaways" section. ~600 words.',
+  short:  'Organise the summary into 3-5 short sections. Begin EACH section with a "## " subheading of 3-6 words, then ONE sentence under it. No preamble. ~120 words.',
+  medium: 'Organise the summary into 4-7 sections. Optional 1-line intro first. Begin EACH section with a "## " subheading of 3-6 words, then 1-2 sentences or 2-3 short "-" bullets under it. ~300 words.',
+  long:   'Short intro paragraph, then 5-8 sections, EACH beginning with a "## " subheading. Under each, 2-4 "-" bullets with 1-3 sentences of detail. End with a "## Key takeaways" section. ~600 words.',
 };
 
 function langName(code) {
@@ -40,7 +40,7 @@ export function buildSummaryPrompt({ transcript, language, length, title, channe
     `Rules:`,
     `- Write in ${lang}.`,
     `- Format: ${len}`,
-    `- Use Markdown. Bullets with "-". Bold key terms with **…**.`,
+    `- Use Markdown: start every section with a "## " subheading, "-" for bullets, **…** for key terms.`,
     `- Be faithful to the video — do not invent facts not present in the transcript.`,
     `- Drop filler, ads, sponsor reads, and self-promotion.`,
     `- No "In this video…" preamble. Start with the actual content.`,
@@ -127,7 +127,7 @@ export function buildSourceSummaryPrompt({ source, text, language, length, title
     `Rules:`,
     `- Write in ${lang}.`,
     `- Format: ${len}`,
-    `- Use Markdown. Bullets with "-". Bold key terms with **…**.`,
+    `- Use Markdown: start every section with a "## " subheading, "-" for bullets, **…** for key terms.`,
     `- Be faithful to the source — do not invent facts.`,
     `- Drop filler, ads, sponsor reads, navigation cruft.`,
     `- No "In this <thing>…" preamble. Start with the actual content.`,
@@ -155,7 +155,7 @@ export function buildAttachmentSummaryPrompt({ source, language, length, title }
     `Rules:`,
     `- Write in ${lang}.`,
     `- Format: ${len}`,
-    `- Markdown. Bullets with "-". Bold key terms with **…**.`,
+    `- Markdown: start every section with a "## " subheading, "-" for bullets, **…** for key terms.`,
     `- Be faithful to the document.`,
     `- No preamble — start with the actual content.`,
     ``,
@@ -297,7 +297,7 @@ export function buildFinalSummaryPrompt({ sectionNotes, language, length, title,
     `Rules:`,
     `- Write in ${lang}.`,
     `- Format: ${len}`,
-    `- Markdown. Bullets with "-". Bold key terms with **…**.`,
+    `- Markdown: start every section with a "## " subheading, "-" for bullets, **…** for key terms.`,
     `- De-duplicate ideas that repeat across sections; merge them.`,
     `- Be faithful to the notes — do not invent facts.`,
     `- No "In this video…" preamble. Start with the actual content.`,
