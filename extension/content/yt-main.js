@@ -14,6 +14,12 @@
 (function () {
   'use strict';
 
+  // Re-injecting this MAIN-world script (e.g. when the extension reloads) can't
+  // remove the previously-running copy's listeners, so an OLD copy could answer
+  // a transcript request first with stale logic. Track a generation counter and
+  // let ONLY the newest injection respond — older copies become inert.
+  const MY_GEN = (window.__AIS_YT_GEN = (window.__AIS_YT_GEN || 0) + 1);
+
   // ── Caption capture ──────────────────────────────────────────────────────
   // YouTube no longer serves caption ("timedtext") URLs to plain scripts — the
   // baseUrl returns an empty 200 without a POT / proof-of-origin token that only
@@ -96,6 +102,7 @@
   window.addEventListener('message', async (e) => {
     const d = e.data;
     if (!d || d.source !== 'ais-iso') return;
+    if (MY_GEN !== window.__AIS_YT_GEN) return;   // a newer injection superseded us
     // Seek the live player in place (timestamp click from the embedded panel).
     if (d.type === 'YT_SEEK') {
       try {
