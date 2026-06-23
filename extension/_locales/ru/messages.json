@@ -1,5 +1,11 @@
 {
   "extName":            { "message": "Smart AI Summarizer" },
+  "tplNameStandard": { "message": "Стандартный" },
+  "tplNameExecutive": { "message": "Краткая сводка" },
+  "tplNameEli5": { "message": "Простыми словами" },
+  "tplNameActions": { "message": "Только действия" },
+  "tplNameStudyNotes": { "message": "Учебные заметки" },
+  "tplNameQuotes": { "message": "Ключевые цитаты" },
   "extDescription":     { "message": "Быстрая AI-сводка видео, статей и PDF-документов. Поддерживает популярные AI-модели. Чат с суммированным содержимым." },
   "openSummarizer":     { "message": "Открыть суммаризатор" },
 

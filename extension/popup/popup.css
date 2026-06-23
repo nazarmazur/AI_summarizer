@@ -40,6 +40,9 @@ body.embed {
   width: 100%;
   min-height: 0;
 }
+/* In the embedded card / floating panel, skip the "open a video" placeholder —
+   it only wastes space before the user clicks. The docked side panel keeps it. */
+body.embed:not(.sidepanel) #empty { display: none !important; }
 
 /* Docked side panel: stretch to the full panel height. */
 body.sidepanel { min-height: 100vh; }

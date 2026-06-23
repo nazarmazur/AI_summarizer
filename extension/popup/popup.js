@@ -4,11 +4,39 @@ import { getTierStatus } from '../lib/tier.js';
 import { FEATURES, canUse, isProModel } from '../lib/features.js';
 import { getAllTemplates } from '../lib/templates.js';
 
-const t = (k) => chrome.i18n.getMessage(k) || k;
+const t = (k, subs) => (window.AIS_I18N ? window.AIS_I18N.t(k, subs) : ((typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getMessage(k, subs)) || k));
 
 function escHTML(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// UI locale follows the chosen summary language when a matching interface locale
+// exists (uk/ru/en); otherwise it falls back to the browser default. AI model
+// names are intentionally left in English everywhere.
+const UI_LOCALES = ['uk', 'ru', 'en'];
+function pickUiLocale() {
+  if (UI_LOCALES.includes(settings.uiLang)) return settings.uiLang;
+  if (UI_LOCALES.includes(settings.language)) return settings.language;
+  return null;   // null → chrome.i18n (browser) default
+}
+async function applyUiLocale() {
+  if (!window.AIS_I18N || !window.AIS_I18N.loadLocale) return;
+  await window.AIS_I18N.loadLocale(pickUiLocale());
+  window.AIS_I18N.applyI18n(document);
+}
+
+// Built-in template names are translatable; user templates keep their own name.
+const TPL_NAME_KEY = {
+  standard: 'tplNameStandard', executive: 'tplNameExecutive', eli5: 'tplNameEli5',
+  actions: 'tplNameActions', 'study-notes': 'tplNameStudyNotes', quotes: 'tplNameQuotes',
+};
+function tplName(tpl) {
+  if (!tpl) return '';
+  const key = TPL_NAME_KEY[tpl.id];
+  if (!key) return tpl.name;
+  const v = t(key);
+  return (v && v !== key) ? v : tpl.name;
 }
 
 // --------------------------------------------------------------------- DOM
@@ -135,7 +163,7 @@ function buildLangMenu() {
   const search = document.createElement('input');
   search.type = 'text';
   search.className = 'menu-search';
-  search.placeholder = chrome.i18n.getMessage('langSearch') || 'Search…';
+  search.placeholder = t('langSearch');
   langMenu.appendChild(search);
 
   const listEl = document.createElement('div');
@@ -155,8 +183,11 @@ function buildLangMenu() {
       b.dataset.value = l.code;
       if (settings.language === l.code) b.classList.add('is-selected');
       b.addEventListener('click', () => {
-        setSettings({ language: l.code }).then(() => {
+        setSettings({ language: l.code }).then(async () => {
           settings.language = l.code;
+          await applyUiLocale();   // re-localize the whole UI to the new language
+          buildModelMenu();
+          buildTemplateMenu();
           updateChips();
           hideMenus();
         });
@@ -180,8 +211,8 @@ function buildModelMenu() {
   autoBtn.className = 'menu-item menu-item-rich' + (settings.model === 'auto' ? ' is-selected' : '');
   autoBtn.dataset.value = 'auto';
   autoBtn.innerHTML = `
-    <span class="mi-title">${escHTML(chrome.i18n.getMessage('modelAuto') || 'Auto')}</span>
-    <span class="mi-sub">${escHTML(chrome.i18n.getMessage('modelAutoDesc') || 'Auto-pick the best available model based on your API keys')}</span>`;
+    <span class="mi-title">${escHTML(t('modelAuto'))}</span>
+    <span class="mi-sub">${escHTML(t('modelAutoDesc'))}</span>`;
   modelMenu.appendChild(autoBtn);
 
   for (const prov of ['gemini', 'openai', 'anthropic']) {
@@ -214,7 +245,7 @@ async function buildTemplateMenu() {
     b.className = 'menu-item' + (tpl.id === (settings.templateId || 'standard') ? ' is-selected' : '');
     b.dataset.value = tpl.id;
     b.title = tpl.description || '';
-    b.innerHTML = `<span>${tpl.name}</span>${!tpl.builtin ? '<span class="pill">custom</span>' : ''}`;
+    b.innerHTML = `<span>${escHTML(tplName(tpl))}</span>${!tpl.builtin ? '<span class="pill">custom</span>' : ''}`;
     if (!tpl.builtin) b.dataset.pro = '1';
     b.addEventListener('click', async () => {
       if (!tpl.builtin && currentTier !== 'pro') {
@@ -224,7 +255,7 @@ async function buildTemplateMenu() {
       }
       await setSettings({ templateId: tpl.id });
       settings.templateId = tpl.id;
-      templateChipLabel.textContent = tpl.name;
+      templateChipLabel.textContent = tplName(tpl);
       hideMenus();
     });
     templateMenu.appendChild(b);
@@ -311,7 +342,7 @@ function updateChips() {
   modelChipLabel.textContent  = modelLabel(settings.model);
   if (cachedTemplates.length) {
     const cur = cachedTemplates.find((x) => x.id === (settings.templateId || 'standard')) || cachedTemplates[0];
-    templateChipLabel.textContent = cur ? cur.name : 'Standard';
+    templateChipLabel.textContent = cur ? tplName(cur) : 'Standard';
   }
 
   document.querySelectorAll('#langMenu .menu-item').forEach((el) =>
@@ -855,7 +886,7 @@ async function run(kind, opts) {
         loadingProgress.hidden = true;
       }
       if (msg.phase === 'map') {
-        loadingLabel.textContent = chrome.i18n.getMessage('loadingChunk', ['0', '?']) || 'Analysing chunks…';
+        loadingLabel.textContent = t('loadingChunk', ['0', '?']) || 'Analysing chunks…';
         loadingProgress.hidden = false;
       }
       if (msg.phase === 'synthesis') {
@@ -869,7 +900,7 @@ async function run(kind, opts) {
       const done  = msg.done  || 0;
       loadingProgress.hidden = false;
       loadingProgressBar.style.width = total ? Math.round((done / total) * 100) + '%' : '0%';
-      loadingLabel.textContent = chrome.i18n.getMessage('loadingChunk', [String(done), String(total)])
+      loadingLabel.textContent = t('loadingChunk', [String(done), String(total)])
                               || ('Analysing section ' + done + '/' + total + '…');
       return;
     }
@@ -897,7 +928,7 @@ async function run(kind, opts) {
       if (msg.result && msg.result.via === 'api-fallback') {
         const provName = (msg.result.provider || '').toUpperCase();
         fallbackBanner.textContent =
-          chrome.i18n.getMessage('bannerApiFallback', [provName]) || ('Switched to API (' + provName + ')');
+          t('bannerApiFallback', [provName]) || ('Switched to API (' + provName + ')');
         fallbackBanner.hidden = false;
       } else {
         fallbackBanner.hidden = true;
@@ -1256,10 +1287,10 @@ async function init() {
     detectEmbedContext();
     listenForThemeMessages();
     settings = { ...DEFAULT_SETTINGS, ...(await getSettings().catch(() => ({}))) };
+    await applyUiLocale();   // load the UI locale derived from the chosen language
     buildLangMenu();
     buildModelMenu();
     await buildTemplateMenu().catch(() => {});
-    if (window.AIS_I18N) window.AIS_I18N.applyI18n();
     updateChips();
     await prefillFromActiveTab().catch(() => {});
 

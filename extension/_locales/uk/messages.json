@@ -1,9 +1,15 @@
 {
   "extName":            { "message": "Smart AI Summarizer" },
+  "tplNameStandard": { "message": "Стандартний" },
+  "tplNameExecutive": { "message": "Стислий огляд" },
+  "tplNameEli5": { "message": "Простими словами" },
+  "tplNameActions": { "message": "Лише пункти дій" },
+  "tplNameStudyNotes": { "message": "Навчальні нотатки" },
+  "tplNameQuotes": { "message": "Ключові цитати" },
   "extDescription":     { "message": "Швидкий AI-підсумок відео, статей та PDF-документів. Підтримує популярні AI-моделі. Чат із підсумованим вмістом." },
   "openSummarizer":     { "message": "Відкрити підсумарізатор" },
 
-  "tabSummary":         { "message": "Сводка" },
+  "tabSummary":         { "message": "Підсумок" },
   "tabTimestamps":      { "message": "Тайм-коди" },
   "tabHistory":         { "message": "Історія" },
   "historyTitle":       { "message": "Історія підсумків" },
@@ -17,7 +23,7 @@
   "historyFreeCap":     { "message": "Free план показує тільки останні 10 підсумків." },
   "historyCount":       { "message": "Записів: $N$", "placeholders": { "n": { "content": "$1" } } },
   "filterAll":          { "message": "Всі" },
-  "filterSummary":      { "message": "Сводки" },
+  "filterSummary":      { "message": "Підсумки" },
   "filterTimestamps":   { "message": "Тайм-коди" },
 
   "selectLanguage":     { "message": "Мова" },
