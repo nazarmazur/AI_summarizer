@@ -318,6 +318,10 @@ function applyTierToUI() {
 }
 
 document.addEventListener('click', () => hideMenus());
+// When embedded in an iframe (the YouTube card / side panel), a click on the
+// host page never reaches our document — but it does blur our window. Close any
+// open dropdown when focus leaves the frame so menus don't stay stuck open.
+window.addEventListener('blur', () => hideMenus());
 
 // --------------------------------------------------------------------- chips
 

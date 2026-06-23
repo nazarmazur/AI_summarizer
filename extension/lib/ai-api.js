@@ -134,6 +134,13 @@ async function streamGemini({ apiKey, model, prompt, onDelta, attachments }) {
   if (resp.status === 404 && model !== GEMINI_FALLBACK_MODEL) {
     resp = await callModel(GEMINI_FALLBACK_MODEL);
   }
+  // Transient overload (503 UNAVAILABLE / 429 RESOURCE_EXHAUSTED): Gemini's
+  // "model is overloaded / high demand" spikes are usually momentary, so wait a
+  // beat and retry once before surfacing the error to the user.
+  if (resp.status === 503 || resp.status === 429) {
+    await new Promise((r) => setTimeout(r, 1800));
+    resp = await callModel(model);
+  }
   let full = '';
   for await (const payload of iterSSE(resp)) {
     try {
