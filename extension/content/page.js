@@ -214,6 +214,47 @@
   // ---------- Lifecycle ----------
 
   let lastYTVideoId = null;
+  let lastShortsUrl = null;  // Track the full /shorts/ID URL for Shorts watcher
+
+  // YouTube Shorts watcher: detect when user scrolls to the next short.
+  // In Shorts, scrolling does NOT change the URL — it stays at /shorts/<id>.
+  // We detect the active video by watching the visible reel's video-id attribute.
+  function detectActiveShortsVideo() {
+    if (!location.pathname.startsWith('/shorts/')) return null;
+    // The active reel is either:
+    // - ytd-reel-video-renderer with data-video-id or a child with videoId
+    // - yt-reel-video-renderer with data-video-id
+    // - the [is-active] attribute on a reel container
+    const activeReel = document.querySelector('ytd-reel-video-renderer[is-active], yt-reel-video-renderer[is-active]');
+    if (activeReel) {
+      const vidId = activeReel.getAttribute('data-video-id');
+      if (vidId) return vidId;
+    }
+    // Fallback: check the first visible reel or the last-rendered one
+    const reels = document.querySelectorAll('ytd-reel-video-renderer, yt-reel-video-renderer');
+    for (const reel of reels) {
+      const rect = reel.getBoundingClientRect();
+      // If the reel is mostly in the viewport, it's likely the active one
+      if (rect.top < window.innerHeight * 0.7 && rect.bottom > window.innerHeight * 0.3) {
+        const vidId = reel.getAttribute('data-video-id');
+        if (vidId) return vidId;
+      }
+    }
+    return null;
+  }
+
+  // Broadcast a URL update to all embedded iframes so they target the new short
+  function broadcastShortsUrlChange(newUrl) {
+    if (lastShortsUrl === newUrl) return;  // no change
+    lastShortsUrl = newUrl;
+    const iframes = document.querySelectorAll('iframe[src*="popup.html"]');
+    iframes.forEach((iframe) => {
+      try {
+        iframe.contentWindow.postMessage({ type: 'AIS_URL', url: newUrl }, '*');
+      } catch (_) { /* ignore cross-origin or disconnected iframe */ }
+    });
+  }
+
   function tick() {
     if (isYouTube) {
       const vid = getYTVideoId();
@@ -223,6 +264,19 @@
         const old = document.getElementById(CARD_ID);
         if (old) old.remove();
       }
+
+      // YouTube Shorts: detect active short and update panel URL
+      if (location.pathname.startsWith('/shorts/')) {
+        const activeVidId = detectActiveShortsVideo();
+        if (activeVidId) {
+          const shortsUrl = 'https://www.youtube.com/shorts/' + activeVidId;
+          broadcastShortsUrlChange(shortsUrl);
+        }
+      } else {
+        // Watch page: reset Shorts tracking
+        lastShortsUrl = null;
+      }
+
       mountYTCard();
       mountYTButton();
     } else if (shouldShowFloatingFAB()) {

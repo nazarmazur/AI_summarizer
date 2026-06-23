@@ -1,6 +1,6 @@
 import { getSettings, setSettings, getApiKeys, setApiKeys } from '../lib/ai-api.js';
 import { getSession, signOut } from '../lib/supabase.js';
-import { LANGUAGES, DEFAULT_SETTINGS, SUPABASE_URL, SUPABASE_ANON, BILLING_PROVIDER, RELEASE_MODE, HAS_SUPABASE, HAS_PRO, DONATE } from '../lib/config.js';
+import { LANGUAGES, DEFAULT_SETTINGS, SUPABASE_URL, SUPABASE_ANON, BILLING_PROVIDER, RELEASE_MODE, HAS_SUPABASE, HAS_PRO, DONATE, MODELS, modelsByProvider } from '../lib/config.js';
 import { getHealth, resetHealth } from '../lib/bridge-health.js';
 import { getTierStatus, invalidateTierCache } from '../lib/tier.js';
 import { PRO_MONTHLY_POOL_LIMIT, FREE_DAILY_POOL_LIMIT } from '../lib/features.js';
@@ -30,6 +30,31 @@ function fillLanguageOptions() {
     o.textContent = l.label;
     langSel.appendChild(o);
   });
+}
+
+function fillModelOptions() {
+  modelSel.innerHTML = '';
+  // Auto option
+  const autoOpt = document.createElement('option');
+  autoOpt.value = 'auto';
+  autoOpt.textContent = 'Auto (best available)';
+  modelSel.appendChild(autoOpt);
+
+  // Group models by provider
+  const groups = modelsByProvider();
+  const providerLabels = { gemini: 'Google Gemini', openai: 'OpenAI', anthropic: 'Anthropic Claude' };
+
+  for (const prov of ['gemini', 'openai', 'anthropic']) {
+    const group = document.createElement('optgroup');
+    group.label = providerLabels[prov];
+    for (const m of groups[prov]) {
+      const o = document.createElement('option');
+      o.value = m.key;
+      o.textContent = m.label;
+      group.appendChild(o);
+    }
+    modelSel.appendChild(group);
+  }
 }
 
 async function loadAll() {
@@ -437,6 +462,7 @@ function setupDonate() {
 }
 
 fillLanguageOptions();
+fillModelOptions();
 loadAll();
 paintBridgeStatuses();
 applyReleaseGates();

@@ -832,7 +832,7 @@ body.dark .modal-icon { background: #2a2538; }
   padding: 4px;
   min-width: 160px;
   z-index: 1000;
-  max-height: 280px;
+  max-height: 420px;
   overflow-y: auto;
 }
 .menu-item {
@@ -927,6 +927,62 @@ body.dark .menu-item-rich .mi-sub { color: var(--text-mute); }
 body.dark .menu-item-rich:hover .mi-title { color: #a78bfa; }
 
 body.dark .menu-search { background: #1f1f1f; border-color: #2a2a2a; color: var(--text); }
+
+/* ============================================================ share menu */
+
+.share-menu {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.share-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color .12s ease, color .12s ease;
+}
+.share-menu-item:hover {
+  background: #f3f0ff;
+  color: var(--accent);
+}
+.share-menu-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--text-soft);
+}
+.share-menu-item:hover svg {
+  color: var(--accent);
+}
+
+body.dark .share-menu {
+  background: #1f1f1f;
+  border-color: #2a2a2a;
+}
+body.dark .share-menu-item:hover {
+  background: #2a2a2a;
+  color: #a78bfa;
+}
+body.dark .share-menu-item:hover svg {
+  color: #a78bfa;
+}
 
 /* ============================================================ scrollbar */
 

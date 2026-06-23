@@ -98,6 +98,8 @@ const chatSuggest   = $('chatSuggestions');
 // --------------------------------------------------------------------- state
 let settings = { ...DEFAULT_SETTINGS };
 let lastJob  = null;
+let lastRunCall = null;   // { kind, opts } of the most recent run() — for retry buttons
+let postHeight  = null;   // set in embed mode → re-measures + reports iframe height
 let currentTier = 'free';
 let upsellContext = null;   // { feature, pendingKind } — only used in Pro builds
 
@@ -267,6 +269,9 @@ function positionMenu(menu, anchor) {
   menu.style.top  = (r.bottom + 4) + 'px';
   menu.style.left = r.left + 'px';
   menu.hidden = false;
+  // Embedded card: the dropdown is absolutely positioned and would be clipped by
+  // the (short) iframe — grow the card to fit it so all models are visible.
+  if (postHeight) setTimeout(postHeight, 0);
 }
 
 function hideMenus() {
@@ -274,6 +279,7 @@ function hideMenus() {
   lengthMenu.hidden = true;
   modelMenu.hidden = true;
   templateMenu.hidden = true;
+  if (postHeight) setTimeout(postHeight, 0);   // shrink the card back down
 }
 
 function wireMenu(chip, menu, key) {
@@ -317,11 +323,17 @@ function applyTierToUI() {
   });
 }
 
-document.addEventListener('click', () => hideMenus());
+document.addEventListener('click', () => {
+  hideMenus();
+  if (shareMenu && !shareMenu.hidden) shareMenu.hidden = true;
+});
 // When embedded in an iframe (the YouTube card / side panel), a click on the
 // host page never reaches our document — but it does blur our window. Close any
 // open dropdown when focus leaves the frame so menus don't stay stuck open.
-window.addEventListener('blur', () => hideMenus());
+window.addEventListener('blur', () => {
+  hideMenus();
+  if (shareMenu && !shareMenu.hidden) shareMenu.hidden = true;
+});
 
 // --------------------------------------------------------------------- chips
 
@@ -839,6 +851,7 @@ async function ensureHostAccess(url) {
 
 async function run(kind, opts) {
   const force = !!(opts && opts.force);
+  lastRunCall = { kind, opts };
   const url = urlInput.value.trim();
   const det = pendingPdf ? { kind: 'pdf' } : detectKindLocal(url);
   if (det.kind === 'unknown' && !pendingPdf) {
@@ -885,7 +898,7 @@ async function run(kind, opts) {
     language:     settings.language,
     length:       settings.length,
     modelKey:     settings.model,
-    source:       settings.source || 'api',
+    source:       (opts && opts.sourceOverride) || settings.source || 'api',
     templateId:   settings.templateId || 'standard',
   };
 
@@ -997,6 +1010,19 @@ async function run(kind, opts) {
       if (msg.code === 'QUOTA_EXCEEDED') {
         showError(t('errorQuotaExceeded'),
           HAS_PRO ? { label: t('btnUpgrade'), handler: () => openUpsell(FEATURES.PREMIUM_MODELS) } : null);
+        return;
+      }
+      // The chosen API key hit its rate limit and there's no other key to fall
+      // back to — offer the no-cost browser-session path (drives the user's
+      // already-logged-in Gemini/ChatGPT/Claude tab) and re-run.
+      if (msg.code === 'QUOTA_NO_ALT') {
+        const secs = msg.retryAfter || 0;
+        let m = t('errorQuotaNoAlt');
+        if (secs) m += ' ' + t('retryInSeconds', [String(secs)]);
+        showError(m, {
+          label: t('btnSwitchBrowserRetry'),
+          handler: () => run(lastRunCall.kind, { ...(lastRunCall.opts || {}), force: true, sourceOverride: 'browser' }),
+        });
         return;
       }
       if (msg.code === 'VIDEO_TOO_LONG') {
@@ -1125,23 +1151,128 @@ downloadBtn.addEventListener('click', () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
-// Share — uses Web Share API when available (mobile-style sheet), otherwise
-// falls back to copying a shareable text block to the clipboard.
-shareBtn.addEventListener('click', async () => {
+// Share menu — build and position the share menu for explicit share options
+const shareMenu = document.createElement('div');
+shareMenu.className = 'share-menu';
+shareMenu.hidden = true;
+document.body.appendChild(shareMenu);
+
+function buildShareMenu() {
+  const title = (lastResult.meta && lastResult.meta.title) || 'Summarized content';
+  const sourceUrl = lastResult.url || (lastResult.videoId ? 'https://www.youtube.com/watch?v=' + lastResult.videoId : '');
+  const text = (lastResult.meta && lastResult.meta.title) ? lastResult.meta.title : 'Check out this summary';
+
+  const options = [
+    {
+      id: 'telegram',
+      label: 'Telegram',
+      i18nKey: 'shareMenuTelegram',
+      icon: 'M23 1.5a11.88 11.88 0 0 0-7.46 2.32L2.92 9.45a1 1 0 0 0 .12 1.6l6.26 4.63a1 1 0 0 0 1.5-.86V6.33l5.24 3.89a1 1 0 0 0 1.5-.87V2.86a1 1 0 0 0-.54-.98 11.87 11.87 0 0 0-4.07-.38z',
+      url: () => `https://t.me/share/url?url=${encodeURIComponent(sourceUrl)}&text=${encodeURIComponent(text)}`
+    },
+    {
+      id: 'whatsapp',
+      label: 'WhatsApp',
+      i18nKey: 'shareMenuWhatsApp',
+      icon: 'M17.47 14.28c-.5-.25-2.88-1.42-3.33-1.58-.45-.15-.78-.25-1.1.25-.33.5-1.27 1.58-1.56 1.9-.28.33-.58.37-1.08.12-1.27-.63-2.63-1.48-3.68-2.53-1-1-1.9-2.23-2.53-3.68-.25-.5-.21-.8.12-1.08.33-.28.79-.88 1.13-1.38.25-.33.33-.58.5-.9.16-.33.08-.62-.04-.87-.12-.25-1.1-2.65-1.5-3.63-.4-.95-.8-.82-1.1-.83h-1a2.06 2.06 0 0 0-1.46.63C2.16 2.63 1.5 3.3 1.5 5s.75 3.5 2.36 5.25 3.75 3.5 5.8 4.5c.7.4 1.2.66 1.6.85 1.3.65 2.5.58 3.4-.36.63-.68 1.3-1.68 1.75-2.28.25-.33.58-.25.9-.16.33.08 2.1 1 2.46 1.17.36.17.75.25.87.75.13.5 0 2-.25 2.5s-1.3 1-1.8 1.08-1.5.12-2.4-.4c-1.36-.77-2.5-1.77-3.5-2.88'
+    },
+    {
+      id: 'twitter',
+      label: 'X (Twitter)',
+      i18nKey: 'shareMenuTwitter',
+      icon: 'M18.5 2h3.5L13 10.5 23 22h-7.5L8.5 13.5 1 22H-2.5L9.5 9 0 2h7.5L13.5 8.5 20.5 2M16.5 20h2L6.5 4h-2',
+      url: () => `https://twitter.com/intent/tweet?text=${encodeURIComponent(text + ' ' + sourceUrl)}`
+    },
+    {
+      id: 'facebook',
+      label: 'Facebook',
+      i18nKey: 'shareMenuFacebook',
+      icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m3.5 10.5h-2.5v8h-3v-8h-2v-3h2v-1.5c0-1.98.42-4.5 4-4.5h3v2.8h-2c-.5 0-.5.2-.5.8v1.4h3l-.5 3z',
+      url: () => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(sourceUrl)}`
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      i18nKey: 'shareMenuEmail',
+      icon: 'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z',
+      url: () => `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text + '\n\n' + sourceUrl)}`
+    },
+    {
+      id: 'copy',
+      label: 'Copy link',
+      i18nKey: 'shareMenuCopyLink',
+      icon: 'M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z',
+      action: async () => {
+        try {
+          await navigator.clipboard.writeText(sourceUrl);
+          flashTitle(shareBtn, t('btnCopied'));
+        } catch (_) {}
+        shareMenu.hidden = true;
+      }
+    }
+  ];
+
+  shareMenu.innerHTML = options.map((opt) => {
+    const localizedLabel = opt.i18nKey ? t(opt.i18nKey) : opt.label;
+    return `
+    <button class="share-menu-item" data-share-id="${opt.id}" type="button" title="${escHTML(localizedLabel)}">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+        <path d="${opt.icon}"/>
+      </svg>
+      <span>${escHTML(localizedLabel)}</span>
+    </button>
+  `;
+  }).join('');
+
+  // Attach click handlers
+  options.forEach((opt) => {
+    const btn = shareMenu.querySelector(`[data-share-id="${opt.id}"]`);
+    if (btn) {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (opt.action) {
+          await opt.action();
+        } else if (opt.url) {
+          try { window.open(opt.url(), '_blank', 'noopener'); } catch (_) {}
+          shareMenu.hidden = true;
+        }
+      });
+    }
+  });
+}
+
+// Share button handler — try Web Share API first (desktop/native),
+// fallback to explicit share menu for iframe context (YouTube card)
+shareBtn.addEventListener('click', async (e) => {
   if (!lastResult) return;
+  e.stopPropagation();
+
   const title = (lastResult.meta && lastResult.meta.title) || 'AI Summary';
-  const url = lastResult.url || (lastResult.videoId ? 'https://www.youtube.com/watch?v=' + lastResult.videoId : '');
-  const text = buildMarkdownExport(lastResult, lastJob && lastJob.kind);
-  if (navigator.share) {
+  const sourceUrl = lastResult.url || (lastResult.videoId ? 'https://www.youtube.com/watch?v=' + lastResult.videoId : '');
+  const summaryText = (lastResult.meta && lastResult.meta.title) ? lastResult.meta.title : 'Check out this summary';
+
+  // In iframe context (YouTube card), skip navigator.share — it throws due to
+  // cross-origin restrictions. Show the menu directly.
+  const isIframe = window !== window.top;
+
+  if (!isIframe && navigator.share) {
     try {
-      await navigator.share({ title, text, url });
+      await navigator.share({
+        title,
+        text: summaryText + (sourceUrl ? ' — ' + sourceUrl : ''),
+        url: sourceUrl
+      });
       return;
-    } catch (_) { /* user canceled */ }
+    } catch (_) { /* user canceled or not supported */ }
   }
-  try {
-    await navigator.clipboard.writeText(text + (url ? '\n\n' + url : ''));
-    flashTitle(shareBtn, t('btnCopied'));
-  } catch (_) {}
+
+  // Fallback: show explicit share menu with social links + copy
+  buildShareMenu();
+  const rect = shareBtn.getBoundingClientRect();
+  shareMenu.style.position = 'fixed';
+  shareMenu.style.top = (rect.bottom + 8) + 'px';
+  shareMenu.style.right = (window.innerWidth - rect.right) + 'px';
+  shareMenu.hidden = false;
 });
 
 function flashTitle(btn, text) {
@@ -1150,41 +1281,40 @@ function flashTitle(btn, text) {
   setTimeout(() => btn.setAttribute('title', old || ''), 1500);
 }
 
-// Bookmark — store result in chrome.storage.local. Toggle on second click.
-const BOOKMARK_KEY = 'ais_bookmarks';
+// Bookmark — toggle flag on the history entry itself. Reflect state from history store.
 async function isBookmarked(result) {
   if (!result) return false;
-  const { [BOOKMARK_KEY]: list } = await chrome.storage.local.get(BOOKMARK_KEY);
+  // Look for a matching history entry by video_id or url
+  const { ais_history: list } = await chrome.storage.local.get('ais_history');
   if (!Array.isArray(list)) return false;
-  const id = bookmarkId(result);
-  return list.some((b) => b.id === id);
+  const entry = findHistoryEntry(result, list);
+  return entry ? !!entry.bookmarked : false;
 }
-function bookmarkId(result) {
-  return result.videoId ? 'v:' + result.videoId : 'u:' + (result.url || JSON.stringify(result.meta || {}));
+function findHistoryEntry(result, list) {
+  // Find history entry by matching video_id or url
+  if (result.videoId) {
+    return list.find((e) => e.video_id === result.videoId);
+  }
+  if (result.url) {
+    return list.find((e) => e.url === result.url);
+  }
+  return null;
 }
 async function toggleBookmark(result) {
-  const { [BOOKMARK_KEY]: prev } = await chrome.storage.local.get(BOOKMARK_KEY);
-  const list = Array.isArray(prev) ? prev.slice() : [];
-  const id = bookmarkId(result);
-  const idx = list.findIndex((b) => b.id === id);
-  if (idx >= 0) {
-    list.splice(idx, 1);
-    await chrome.storage.local.set({ [BOOKMARK_KEY]: list });
-    return false;
-  } else {
-    list.unshift({
-      id,
-      title:    (result.meta && result.meta.title) || '',
-      videoId:  result.videoId || null,
-      url:      result.url || null,
-      kind:     lastJob && lastJob.kind,
-      text:     result.text,
-      created_at: new Date().toISOString(),
-    });
-    while (list.length > 100) list.pop();   // cap at 100
-    await chrome.storage.local.set({ [BOOKMARK_KEY]: list });
-    return true;
+  const { ais_history: list } = await chrome.storage.local.get('ais_history');
+  const entries = Array.isArray(list) ? list : [];
+  const entry = findHistoryEntry(result, entries);
+
+  if (entry) {
+    // History entry exists — toggle its bookmarked flag
+    entry.bookmarked = !entry.bookmarked;
+    await chrome.storage.local.set({ ais_history: entries });
+    return entry.bookmarked;
   }
+  // History entry doesn't exist yet (result is fresh, not yet saved to history)
+  // In this case we can't persist the bookmark flag to a non-existent entry.
+  // The bookmark will be set once the result is saved to history by the service worker.
+  return false;
 }
 bookmarkBtn.addEventListener('click', async () => {
   if (!lastResult) return;
@@ -1267,12 +1397,19 @@ function reportHeightToParent() {
     // Measure the BODY's content height — document.documentElement.scrollHeight is
     // floored at the iframe viewport height, so it can only grow the card, never
     // shrink it back down to the actual content.
-    const h = Math.ceil(document.body.scrollHeight);
+    let h = Math.ceil(document.body.scrollHeight);
+    // An open dropdown is position:absolute and overflows the iframe (which is
+    // sized to body height), so it'd be clipped — grow to include the lowest one.
+    document.querySelectorAll('.menu:not([hidden]), .share-menu:not([hidden])').forEach((m) => {
+      const bottom = Math.ceil(m.getBoundingClientRect().bottom);
+      if (bottom > h) h = bottom + 10;
+    });
     if (h && Math.abs(h - last) > 2) {
       last = h;
       try { window.parent.postMessage({ type: 'AIS_HEIGHT', height: h }, '*'); } catch (_) {}
     }
   };
+  postHeight = post;
   try { new ResizeObserver(post).observe(document.body); } catch (_) {}
   window.addEventListener('load', post);
   post();
@@ -1298,6 +1435,19 @@ function listenForThemeMessages() {
   window.addEventListener('message', (e) => {
     if (e && e.data && e.data.type === 'AIS_THEME') {
       document.body.classList.toggle('dark', !!e.data.dark);
+      return;
+    }
+    // Listen for URL updates from the parent page (e.g., YouTube Shorts watcher)
+    if (e && e.data && e.data.type === 'AIS_URL' && typeof e.data.url === 'string') {
+      // Update the URL input field to the new short's URL
+      urlInput.value = e.data.url;
+      updateSourceChip(e.data.url);
+      // Clear any stale result/error state so user can summarize the new short
+      cancelActiveStream();
+      showState('empty');
+      fallbackBanner.hidden = true;
+      chatBox.hidden = true;
+      return;
     }
   });
   // Also apply system preference as a default for the standalone popup.

@@ -26,6 +26,7 @@ function entryFromResult(result) {
     provider:      result.provider || null,
     summary_md:    result.kind === 'summary'    ? result.text : null,
     timestamps_md: result.kind === 'timestamps' ? result.text : null,
+    bookmarked:    false,
   };
 }
 
@@ -53,4 +54,18 @@ export async function deleteById(id) {
 
 export async function clearAll() {
   await chrome.storage.local.remove(KEY);
+}
+
+export async function toggleBookmark(id) {
+  const list = await getAll();
+  const entry = list.find((e) => e.id === id);
+  if (!entry) return false;
+  entry.bookmarked = !entry.bookmarked;
+  await chrome.storage.local.set({ [KEY]: list });
+  return entry.bookmarked;
+}
+
+export async function getBookmarked() {
+  const list = await getAll();
+  return list.filter((e) => e.bookmarked);
 }

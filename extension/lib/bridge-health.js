@@ -4,14 +4,15 @@
 //   { failStreak: number, lastErr: string|null, lastFailAt: number,
 //     lastOkAt: number, mutedUntil: number }
 //
-// • After 2 consecutive failures, the provider is "muted" for 24h —
-//   the orchestrator will skip the bridge and try API instead.
+// • After 2 consecutive failures, the provider is "muted" for 4h —
+//   the orchestrator will skip the bridge and try API instead. (Short window
+//   so a transient site/DOM hiccup doesn't lock the bridge out for a whole day.)
 // • Any success resets the failStreak and clears the mute.
 // • The user can manually re-test via the options page (resetHealth()).
 
 const KEY = 'ais_bridge_health';
 const MUTE_AFTER_FAILS = 2;
-const MUTE_MS          = 24 * 60 * 60 * 1000;
+const MUTE_MS          = 4 * 60 * 60 * 1000;
 
 function blank() {
   return { failStreak: 0, lastErr: null, lastFailAt: 0, lastOkAt: 0, mutedUntil: 0 };

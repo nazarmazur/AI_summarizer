@@ -121,15 +121,7 @@
         </div>
         <div class="field">
           <label data-i18n="selectModel">Model</label>
-          <select id="defaultModel">
-            <option value="auto"      data-i18n="modelAuto"></option>
-            <option value="gemini"    >Gemini 2.0 Flash</option>
-            <option value="geminiPro" >Gemini 2.5 Pro</option>
-            <option value="gpt"       >GPT-4o mini</option>
-            <option value="gptPro"    >GPT-4o</option>
-            <option value="claude"    >Claude Haiku 4.5</option>
-            <option value="claudePro" >Claude Sonnet 4.6</option>
-          </select>
+          <select id="defaultModel"></select>
         </div>
       </div>
     </section>
@@ -180,6 +172,31 @@
         </div>
         <div class="bridge-row" data-provider="anthropic">
           <span class="bridge-name">Claude</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="grok">
+          <span class="bridge-name">Grok</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="deepseek">
+          <span class="bridge-name">DeepSeek</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="qwen">
+          <span class="bridge-name">Qwen</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="kimi">
+          <span class="bridge-name">Kimi</span>
+          <span class="bridge-status" data-status>—</span>
+          <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
+        </div>
+        <div class="bridge-row" data-provider="perplexity">
+          <span class="bridge-name">Perplexity</span>
           <span class="bridge-status" data-status>—</span>
           <button class="btn btn-ghost btn-sm" data-test data-i18n="testBridge">Test</button>
         </div>

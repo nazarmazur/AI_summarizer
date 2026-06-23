@@ -41,7 +41,7 @@ const KIND_LABEL_FOR_TPL = {
   twitch: 'Twitch VOD page', social: 'short-form social-media video',
   webpage: 'web article', pdf: 'PDF document',
 };
-import { generateStream, getApiKeys, pickProviderFromKey } from '../lib/ai-api.js';
+import { generateStream, getApiKeys, pickProviderFromKey, isQuotaError, getRetryAfterSeconds } from '../lib/ai-api.js';
 import { getSession } from '../lib/supabase.js';
 import { SUPABASE_URL, SUPABASE_ANON, RELEASE_MODE, HAS_SUPABASE, HAS_PRO } from '../lib/config.js';
 import { saveResult as saveLocalHistory } from '../lib/history-store.js';
@@ -51,9 +51,14 @@ import { getTierStatus, bumpDayUsage, getDayUsage } from '../lib/tier.js';
 import { FEATURES, canUse, isProModel, FREE_DAILY_POOL_LIMIT, FREE_MAX_VIDEO_SECONDS, PRO_MONTHLY_POOL_LIMIT } from '../lib/features.js';
 
 const BRIDGE_URL = {
-  gemini:    'https://gemini.google.com/app',
-  openai:    'https://chatgpt.com/',
-  anthropic: 'https://claude.ai/new',
+  gemini:     'https://gemini.google.com/app',
+  openai:     'https://chatgpt.com/',
+  anthropic:  'https://claude.ai/new',
+  grok:       'https://grok.com/',
+  deepseek:   'https://chat.deepseek.com/',
+  qwen:       'https://chat.qwen.ai/',
+  kimi:       'https://www.kimi.com/',
+  perplexity: 'https://www.perplexity.ai/',
 };
 const CHUNK_THRESHOLD = 45_000;   // chars; below this we go single-shot
 const CHUNK_TARGET    = 25_000;   // chars per chunk for map-reduce
@@ -193,8 +198,28 @@ async function complete({ prompt, source, modelKey, provider, keys, onDelta, all
     const err = new Error('NO_API_KEY:' + provider);
     err.code = 'NO_API_KEY'; err.provider = provider; throw err;
   }
-  const text = await generateStream(prompt, modelKey, onDelta);
-  return { text, via: 'api' };
+  try {
+    const text = await generateStream(prompt, modelKey, onDelta);
+    return { text, via: 'api' };
+  } catch (e) {
+    // Quota / rate-limit (e.g. Gemini free-tier 20 req/min): transparently
+    // retry on another provider the user has a key for. The error fires before
+    // any token streams, so a retry won't duplicate output. If there's no other
+    // key, surface a structured QUOTA_NO_ALT so the popup can offer the
+    // browser-session fallback + a retry countdown.
+    if (allowFallback && isQuotaError(e)) {
+      const alt = altProviderModel(provider, keys);
+      if (alt) {
+        const text = await generateStream(prompt, alt.modelKey, onDelta);
+        return { text, via: 'api-alt', provider: alt.provider };
+      }
+      const err = new Error(e.message);
+      err.code = 'QUOTA_NO_ALT'; err.provider = provider;
+      err.retryAfter = getRetryAfterSeconds(e);
+      throw err;
+    }
+    throw e;
+  }
 }
 
 function pickKeyForProvider(provider, keys) {
@@ -203,6 +228,17 @@ function pickKeyForProvider(provider, keys) {
   return keys.gemini;
 }
 function anyKey(keys) { return keys.gemini || keys.openai || keys.anthropic; }
+
+// First OTHER provider the user has a key for, with its default model key.
+function altProviderModel(provider, keys) {
+  for (const p of ['gemini', 'openai', 'anthropic']) {
+    if (p === provider) continue;
+    if (pickKeyForProvider(p, keys)) {
+      return { provider: p, modelKey: p === 'openai' ? 'gpt' : (p === 'anthropic' ? 'claude' : 'gemini') };
+    }
+  }
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Map-reduce summary

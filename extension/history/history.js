@@ -1,7 +1,7 @@
 import { getSession } from '../lib/supabase.js';
 import { SUPABASE_URL, SUPABASE_ANON, RELEASE_MODE, HAS_SUPABASE } from '../lib/config.js';
 import { getTierStatus } from '../lib/tier.js';
-import { getAll as getLocalHistory, deleteById as deleteLocalById } from '../lib/history-store.js';
+import { getAll as getLocalHistory, deleteById as deleteLocalById, toggleBookmark } from '../lib/history-store.js';
 
 const t = (k) => chrome.i18n.getMessage(k) || k;
 const $ = (id) => document.getElementById(id);
@@ -34,6 +34,7 @@ let allEntries = [];
 let visible    = [];
 let selectedId = null;
 let kindFilter = '';
+let bookmarkedFilter = '';
 let q          = '';
 let tier       = 'free';
 let session    = null;
@@ -134,6 +135,7 @@ function applyFilters() {
   const ql = q.trim().toLowerCase();
   visible = allEntries.filter((row) => {
     if (kindFilter && kindOf(row) !== kindFilter) return false;
+    if (bookmarkedFilter === 'true' && !row.bookmarked) return false;
     if (!ql) return true;
     const hay = (row.video_title + ' ' + (row.video_channel || '') + ' ' + textOf(row)).toLowerCase();
     return hay.includes(ql);
@@ -165,8 +167,24 @@ function renderList() {
         <span class="badge">${escHTML(kindOf(row))}</span>
         <span>${escHTML(row.video_channel || '')}</span>
         <span style="margin-left:auto">${fmtDate(row.created_at)}</span>
-      </div>`;
-    li.addEventListener('click', () => selectEntry(row.id));
+      </div>
+      <button class="bookmark-icon ${row.bookmarked ? 'is-on' : ''}" data-id="${escHTML(row.id)}" title="Toggle bookmark" aria-label="Toggle bookmark">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      </button>`;
+    li.addEventListener('click', (e) => {
+      if (e.target.closest('.bookmark-icon')) return;
+      selectEntry(row.id);
+    });
+    const bookmarkBtn = li.querySelector('.bookmark-icon');
+    bookmarkBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        row.bookmarked = await toggleBookmark(row.id);
+        bookmarkBtn.classList.toggle('is-on', row.bookmarked);
+      } catch (err) {
+        console.error('Failed to toggle bookmark:', err);
+      }
+    });
     entryList.appendChild(li);
   }
   if (tier !== 'pro' && allEntries.length >= FREE_HISTORY_CAP) {
@@ -246,6 +264,7 @@ document.querySelectorAll('.chip[data-filter-kind]').forEach((c) => {
     document.querySelectorAll('.chip[data-filter-kind]').forEach((x) => x.classList.remove('is-active'));
     c.classList.add('is-active');
     kindFilter = c.dataset.filterKind;
+    bookmarkedFilter = c.dataset.filterBookmarked || '';
     applyFilters();
   });
 });

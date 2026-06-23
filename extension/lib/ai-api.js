@@ -36,6 +36,24 @@ export async function setSettings(partial) {
 // time. The caller decides how to interpret each payload (JSON, [DONE], etc.).
 // ---------------------------------------------------------------------------
 
+// Classify a provider error as a transient quota / rate-limit, so callers can
+// fall back to another model or to browser-session mode rather than hard-fail.
+export function isQuotaError(err) {
+  if (!err) return false;
+  if (err.status === 429) return true;
+  const m = String((err && err.message) || err).toLowerCase();
+  return /quota|rate.?limit|resource_exhausted|exceeded your current|too many requests/.test(m);
+}
+
+// Pull a "retry in Ns" hint out of a provider error (Gemini sends
+// "Please retry in 13.6s"). Returns integer seconds, or 0 if none.
+export function getRetryAfterSeconds(err) {
+  const m = String((err && err.message) || '').match(/retry in\s+([\d.]+)\s*s/i);
+  if (m) return Math.ceil(parseFloat(m[1])) || 0;
+  if (err && typeof err.retryAfter === 'number') return err.retryAfter;
+  return 0;
+}
+
 async function* iterSSE(response) {
   if (!response.ok) {
     const text = await response.text().catch(() => '');
