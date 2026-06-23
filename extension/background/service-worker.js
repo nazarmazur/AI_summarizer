@@ -364,6 +364,12 @@ async function runJobStream(payload, hooks) {
   }
   const keys = keysEarly;
   const chosen = pickProviderFromKey(resolvedModelKey, keys);
+  // Browser-session mode drives whichever logged-in site the user picked
+  // (Settings → browser provider), NOT the API model's provider.
+  if (source === 'browser' && payload.browserProvider) {
+    chosen.provider = payload.browserProvider;
+    chosen.model = payload.browserProvider;   // display only — browser mode ignores the API model id
+  }
   onMeta({
     videoId:  sourceObj.videoId || null,
     sourceKind: sourceObj.kind,

@@ -732,6 +732,7 @@ function sendChatQuestion(question) {
       chatInput.disabled  = false;
       chatSendBtn.disabled = false;
       chatInput.focus();
+      refreshSuggestions();   // evolve the starter questions after each answer
       return;
     }
     if (msg.type === 'AIS_ERR') {
@@ -769,6 +770,13 @@ function sendChatQuestion(question) {
 // Ask the model for a few content-specific starter questions and show them as
 // clickable chips above the chat (mirrors — and beats — YouTube's native
 // suggestions, since ours work on videos, articles and PDFs alike).
+// Reset the once-per-source cache so a fresh set of starter questions loads —
+// used after each Q&A answer so the chips keep evolving with the conversation.
+function refreshSuggestions() {
+  suggestionsLoadedFor = null;
+  loadSuggestions();
+}
+
 function loadSuggestions() {
   if (!chatSuggest || !currentSourceKey) return;
   // Starter questions are about the source, not the kind — fetch them once per
@@ -800,6 +808,7 @@ function loadSuggestions() {
       chip.addEventListener('click', () => {
         if (chatActivePort) return;
         chatSuggest.hidden = true;
+        suggestionsLoadedFor = null;   // allow a fresh set after this answer
         sendChatQuestion(q);
       });
       chatSuggest.appendChild(chip);
@@ -899,6 +908,7 @@ async function run(kind, opts) {
     length:       settings.length,
     modelKey:     settings.model,
     source:       (opts && opts.sourceOverride) || settings.source || 'api',
+    browserProvider: settings.browserProvider || 'gemini',
     templateId:   settings.templateId || 'standard',
   };
 

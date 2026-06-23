@@ -120,6 +120,7 @@ export function modelsByProvider() {
 
 export const DEFAULT_SETTINGS = {
   source: 'api',           // 'api' | 'browser'
+  browserProvider: 'gemini', // browser-session target: gemini|openai|anthropic|grok|deepseek|qwen|kimi|perplexity
   model:  'auto',          // 'auto' | one of MODELS keys
   language: 'auto',        // 'auto' = follow YouTube/system, or 'uk', 'ru', 'en', 'es', 'de', 'fr', 'pl'
   length: 'medium',        // 'short' | 'medium' | 'long'

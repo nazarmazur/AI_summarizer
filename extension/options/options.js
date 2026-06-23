@@ -13,6 +13,7 @@ const langSel    = $('defaultLanguage');
 const lenSel     = $('defaultLength');
 const modelSel   = $('defaultModel');
 const sourceRadios = document.querySelectorAll('input[name=source]');
+const browserProviderSel = $('browserProvider');
 const geminiKey    = $('geminiKey');
 const openaiKey    = $('openaiKey');
 const anthropicKey = $('anthropicKey');
@@ -76,6 +77,7 @@ async function loadAll() {
   lenSel.value     = settings.length;
   modelSel.value   = settings.model;
   sourceRadios.forEach((r) => { r.checked = (r.value === (settings.source || 'api')); });
+  if (browserProviderSel) browserProviderSel.value = settings.browserProvider || 'gemini';
 
   // Keys
   const keys = await getApiKeys();
@@ -91,6 +93,7 @@ async function saveAll() {
     length:   lenSel.value,
     model:    modelSel.value,
     source:   chosenSource,
+    browserProvider: browserProviderSel ? browserProviderSel.value : 'gemini',
   });
   await setApiKeys({
     gemini:    geminiKey.value.trim()    || null,
