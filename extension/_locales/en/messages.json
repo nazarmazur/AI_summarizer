@@ -1,5 +1,11 @@
 {
   "extName":            { "message": "Smart AI Summarizer" },
+  "tplNameStandard": { "message": "Standard" },
+  "tplNameExecutive": { "message": "Executive brief" },
+  "tplNameEli5": { "message": "ELI5" },
+  "tplNameActions": { "message": "Action items only" },
+  "tplNameStudyNotes": { "message": "Study notes" },
+  "tplNameQuotes": { "message": "Key quotes" },
   "extDescription":     { "message": "Fast AI summaries for videos, articles, and PDF documents. Works with popular AI models. Chat with the summarized content." },
   "openSummarizer":     { "message": "Open Summarizer" },
 
