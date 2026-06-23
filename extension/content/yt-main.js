@@ -213,15 +213,31 @@
 
     const vd = (pr && pr.videoDetails) || {};
     const meta = { title: vd.title || '', author: vd.author || '', lengthS: parseInt(vd.lengthSeconds || '0', 10) };
-    if (!tracks || !tracks.length) throw err('NO_CAPTIONS', meta);
+    // No caption tracks in the player response — but the "Show transcript" panel
+    // API may still have them (how competitors read auto-captions).
+    if (!tracks || !tracks.length) {
+      const segs = await fetchViaGetTranscript();
+      if (segs.length) return { language: '', isAuto: true, segments: segs, meta };
+      throw err('NO_CAPTIONS', meta);
+    }
 
     const picked = pickTrack(tracks, preferLang);
-    if (!picked || !picked.track.baseUrl) throw err('NO_CAPTIONS', meta);
+    if (!picked || !picked.track.baseUrl) {
+      const segs = await fetchViaGetTranscript();
+      if (segs.length) return { language: '', isAuto: true, segments: segs, meta };
+      throw err('NO_CAPTIONS', meta);
+    }
 
     // Method A — fetch the baseUrl directly (fast; works where not POT-walled).
     let segments = await fetchSegments(String(picked.track.baseUrl), preferLang, picked.needsTranslation);
-    // Method B — POT wall: the direct fetch came back empty. Let the player
-    // load the track with its own proof-of-origin token and capture the body.
+    // Method C — YouTube's get_transcript panel API. Fast, and works for
+    // (auto-)captions even when timedtext is POT-walled, so it catches the
+    // videos Methods A/B can't. This is how competitors read auto-captions.
+    if (!segments.length) {
+      segments = await fetchViaGetTranscript();
+    }
+    // Method B — last resort: drive the player to load the track with its own
+    // proof-of-origin token and capture the response (slow: up to ~9s).
     if (!segments.length) {
       const body = await captureViaPlayer(picked, preferLang);
       if (body) segments = body.trim().charAt(0) === '{' ? parseJson3(body) : parseXml(body);
@@ -229,6 +245,59 @@
     if (!segments.length) throw err('CAPTIONS_BLOCKED', meta);
 
     return { language: picked.track.languageCode, isAuto: picked.track.kind === 'asr', segments, meta };
+  }
+
+  // ── get_transcript panel API ───────────────────────────────────────────────
+  // YouTube's "Show transcript" feature calls /youtubei/v1/get_transcript. It
+  // returns the transcript for manual AND auto-generated captions and isn't
+  // subject to the timedtext POT wall — so it succeeds where Methods A/B fail.
+  async function fetchViaGetTranscript() {
+    try {
+      const params = findTranscriptParams();
+      if (!params) return [];
+      const key = window.ytcfg && window.ytcfg.get && window.ytcfg.get('INNERTUBE_API_KEY');
+      const ver = window.ytcfg && window.ytcfg.get && window.ytcfg.get('INNERTUBE_CONTEXT_CLIENT_VERSION');
+      const r = await fetch('/youtubei/v1/get_transcript' + (key ? ('?key=' + encodeURIComponent(key)) : ''), {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion: ver || '2.20240101', hl: 'en' } }, params }),
+      });
+      if (!r.ok) return [];
+      return parseGetTranscript(await r.json());
+    } catch (_) { return []; }
+  }
+
+  // The transcript params live in ytInitialData (the engagement-panel
+  // continuation). Search the whole object for the first getTranscriptEndpoint.
+  function findTranscriptParams() {
+    let found = null;
+    (function walk(o, depth) {
+      if (found || !o || typeof o !== 'object' || depth > 15) return;
+      if (o.getTranscriptEndpoint && o.getTranscriptEndpoint.params) { found = o.getTranscriptEndpoint.params; return; }
+      for (const k in o) { if (found) return; const v = o[k]; if (v && typeof v === 'object') walk(v, depth + 1); }
+    })(window.ytInitialData || {}, 0);
+    return found;
+  }
+
+  // Collect every transcriptSegmentRenderer in the response into segments.
+  function parseGetTranscript(j) {
+    const out = [];
+    (function walk(o, depth) {
+      if (!o || typeof o !== 'object' || depth > 16) return;
+      if (o.transcriptSegmentRenderer) {
+        const s = o.transcriptSegmentRenderer;
+        const text = (s.snippet && s.snippet.runs ? s.snippet.runs.map((r) => r.text || '').join('') : '')
+          .replace(/\s+/g, ' ').trim();
+        if (text) {
+          const start = parseInt(s.startMs || '0', 10) / 1000;
+          const end = parseInt(s.endMs || '0', 10) / 1000;
+          out.push({ start, dur: Math.max(0, end - start), text });
+        }
+        return;
+      }
+      for (const k in o) { const v = o[k]; if (v && typeof v === 'object') walk(v, depth + 1); }
+    })(j, 0);
+    return out;
   }
 
   // Fetch the caption track and parse it, trying json3 first then the default

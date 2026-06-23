@@ -53,8 +53,9 @@ A free, bring-your-own-key alternative to Eightify/Glasp that works on videos, a
 | host: youtube.com, vimeo.com, twitch.tv, tiktok.com, instagram.com, x.com / twitter.com | Add the summarize UI and read video transcripts/captions on these sites. |
 | host: gemini.google.com, chatgpt.com, claude.ai | Optional "browser-session" mode: drive your already-signed-in AI tab instead of using an API key. |
 | host: generativelanguage.googleapis.com, api.openai.com, api.anthropic.com | Send the content + your prompt directly to the AI provider you selected. |
+| **optional** host: `<all_urls>` | Read a regular web page or PDF you choose to summarize. Requested **on demand** as a one-time per-site prompt when you summarize a non-video page — never at install. |
 
-We do **not** request `<all_urls>`. There is no sign-in, no account, and no payment.
+`<all_urls>` is an **optional** permission — requested on demand (a one-time per-site prompt) only to read a page/PDF you ask to summarize, never granted at install. There is no sign-in, no account, and no payment.
 
 ---
 

@@ -154,7 +154,7 @@
 ## 🆘 Якщо щось пішло не так
 
 **Rejection: "Excessive permissions"**
-- Усі дозволи мінімальні: `storage, scripting, tabs, activeTab, sidePanel` + конкретні хости відео-сайтів і трьох AI-API. `<all_urls>` НЕ запитується — покажіть рев'юеру таблицю дозволів зі STORE_LISTING.md.
+- Базові дозволи мінімальні: `storage, scripting, tabs, activeTab, sidePanel` + конкретні хости відео-сайтів, bridge-сайтів і AI-API. `<all_urls>` — лише **optional_host_permissions**, запитується на вимогу (разовий промпт на сайт) для підсумку звичайних сторінок/PDF, НЕ при встановленні.
 
 **Rejection: "Missing privacy disclosure"**
 - Перевірте чи Privacy Policy URL відкривається у incognito.

@@ -819,6 +819,20 @@ function cacheSig(kind) {
           settings.templateId || 'standard', settings.source || 'api'].join('|');
 }
 
+// Webpages / PDFs aren't in our static host_permissions. When the user asks to
+// summarize one, request access to just that page's origin (optional permission,
+// granted via a one-time Chrome prompt). Returns true (granted / already have
+// it), false (denied), or 'file' for local file:// URLs (which we can't fetch).
+async function ensureHostAccess(url) {
+  let u;
+  try { u = new URL(url); } catch (_) { return true; }
+  if (u.protocol === 'file:') return 'file';
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return true;
+  if (!chrome.permissions || !chrome.permissions.request) return true;
+  try { return await chrome.permissions.request({ origins: [u.origin + '/*'] }); }
+  catch (_) { return false; }
+}
+
 async function run(kind, opts) {
   const force = !!(opts && opts.force);
   const url = urlInput.value.trim();
@@ -841,6 +855,14 @@ async function run(kind, opts) {
     renderFinal(hit.result, kind);
     showState('result');
     return;
+  }
+
+  // Webpages and PDFs-by-URL need host access to read the page (we don't ship
+  // <all_urls>). Request the page's origin on demand — a one-time prompt.
+  if (!pendingPdf && (det.kind === 'webpage' || det.kind === 'pdf')) {
+    const gate = await ensureHostAccess(url);
+    if (gate === 'file') { showError(t('errorLocalFile')); return; }
+    if (gate === false)  { showError(t('errorNoHostPermission')); return; }
   }
 
   cancelActiveStream();

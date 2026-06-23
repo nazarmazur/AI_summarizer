@@ -1,5 +1,7 @@
 {
   "extName":            { "message": "Smart AI Summarizer" },
+  "errorLocalFile": { "message": "Локальные PDF не читаются автоматически — нажмите кнопку загрузки (облако) и выберите файл." },
+  "errorNoHostPermission": { "message": "Чтобы суммировать эту страницу, нужен доступ к ней. Нажмите «Сводка» ещё раз и разрешите доступ." },
   "tplNameStandard": { "message": "Стандартный" },
   "tplNameExecutive": { "message": "Краткая сводка" },
   "tplNameEli5": { "message": "Простыми словами" },

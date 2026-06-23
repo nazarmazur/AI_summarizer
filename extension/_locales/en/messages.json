@@ -1,5 +1,7 @@
 {
   "extName":            { "message": "Smart AI Summarizer" },
+  "errorLocalFile": { "message": "Local PDFs cant be read automatically — use the upload button (cloud icon) to pick the file." },
+  "errorNoHostPermission": { "message": "Summarizing this page needs access to it. Click Summarize again and allow access." },
   "tplNameStandard": { "message": "Standard" },
   "tplNameExecutive": { "message": "Executive brief" },
   "tplNameEli5": { "message": "ELI5" },
