@@ -42,7 +42,14 @@
     // Auto-size the embedding card/panel to the popup's reported content height
     // so an empty or short panel doesn't reserve a tall blank area.
     window.addEventListener('message', (e) => {
-      if (e.source !== iframe.contentWindow || !e.data || e.data.type !== 'AIS_HEIGHT') return;
+      if (e.source !== iframe.contentWindow || !e.data) return;
+      // Timestamp click inside the panel → seek the page's YouTube player in place
+      // (relayed to the MAIN-world helper) instead of opening a new tab.
+      if (e.data.type === 'AIS_SEEK' && typeof e.data.seconds === 'number') {
+        window.postMessage({ source: 'ais-iso', type: 'YT_SEEK', seconds: e.data.seconds }, '*');
+        return;
+      }
+      if (e.data.type !== 'AIS_HEIGHT') return;
       const body = iframe.closest('.ais-card-body');
       if (!body) return;
       const vh = window.innerHeight || 800;

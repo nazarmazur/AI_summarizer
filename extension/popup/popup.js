@@ -458,7 +458,7 @@ function renderMarkdown(md, videoId) {
       s = s.replace(/(^|\s|[\[(])(\d{1,2}:\d{2}(?::\d{2})?)/g, (_m, pre, ts) => {
         const sec = ts.split(':').reduce((a, b) => a * 60 + parseInt(b, 10), 0);
         const u = `https://www.youtube.com/watch?v=${videoId}&t=${sec}s`;
-        return `${pre}<a class="ts" href="${u}" target="_blank" rel="noopener">${ts}</a>`;
+        return `${pre}<a class="ts" href="${u}" data-seconds="${sec}" target="_blank" rel="noopener">${ts}</a>`;
       });
     }
     return s;
@@ -569,7 +569,7 @@ function renderTimestampCards(text, videoId) {
       const desc = m[2].trim();
       const sec = ts.split(':').reduce((a, b) => a * 60 + parseInt(b, 10), 0);
       const href = videoId ? `https://www.youtube.com/watch?v=${videoId}&t=${sec}s` : null;
-      cards.push({ ts, desc, href });
+      cards.push({ ts, desc, href, sec });
     }
   }
   if (!cards.length) return null;   // fall back to markdown rendering
@@ -577,12 +577,28 @@ function renderTimestampCards(text, videoId) {
   return cards.map((c) => `
     <div class="ts-card">
       ${c.href
-        ? `<a class="ts-pill" href="${c.href}" target="_blank" rel="noopener">${escHTML(c.ts)}</a>`
+        ? `<a class="ts-pill" href="${c.href}" data-seconds="${c.sec}" target="_blank" rel="noopener">${escHTML(c.ts)}</a>`
         : `<span class="ts-pill">${escHTML(c.ts)}</span>`}
       <div class="ts-text">${escHTML(c.desc)}</div>
     </div>
   `).join('');
 }
+
+// Timestamp clicks: when the panel is embedded on the video page, seek the player
+// in place (relayed via the parent content script) instead of opening a new tab.
+function onTimestampClick(e) {
+  const a = e.target && e.target.closest && e.target.closest('a.ts, a.ts-pill');
+  if (!a) return;
+  const sec = parseInt(a.dataset.seconds || '', 10);
+  if (Number.isNaN(sec)) return;
+  if (window !== window.top) {
+    e.preventDefault();
+    try { window.parent.postMessage({ type: 'AIS_SEEK', seconds: sec }, '*'); } catch (_) {}
+  }
+  // Standalone popup: fall through — the href opens the video at that time.
+}
+if (resultBody) resultBody.addEventListener('click', onTimestampClick);
+if (chatHistory) chatHistory.addEventListener('click', onTimestampClick);
 
 function renderFinal(result, kind) {
   lastResult = result;

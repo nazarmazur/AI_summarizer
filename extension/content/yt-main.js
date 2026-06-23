@@ -95,7 +95,19 @@
 
   window.addEventListener('message', async (e) => {
     const d = e.data;
-    if (!d || d.source !== 'ais-iso' || d.type !== 'YT_REQ') return;
+    if (!d || d.source !== 'ais-iso') return;
+    // Seek the live player in place (timestamp click from the embedded panel).
+    if (d.type === 'YT_SEEK') {
+      try {
+        const p = document.getElementById('movie_player');
+        if (p && typeof p.seekTo === 'function') {
+          p.seekTo(d.seconds, true);
+          if (typeof p.playVideo === 'function') p.playVideo();
+        }
+      } catch (_) { /* ignore */ }
+      return;
+    }
+    if (d.type !== 'YT_REQ') return;
     const reqId = d.reqId;
     try {
       const data = await getTranscript(d.preferLang);
