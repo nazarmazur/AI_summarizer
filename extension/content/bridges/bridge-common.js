@@ -133,16 +133,49 @@
     input.dispatchEvent(new KeyboardEvent('keyup', o));
   }
 
+  // Generic, locale-aware Send button. Chat sites label the button in the
+  // account's UI language (verified live: Gemini "Надіслати", Grok "Отправить"),
+  // so an English-only "Send" selector misses it. Every bridge falls back here.
+  function findSendDefault() {
+    // 1) A button/[role=button] with a localised Send/Submit aria-label.
+    const q = document.querySelector(
+      '[role="button"][aria-label*="Send" i]:not([aria-disabled="true"]),' +
+      'button[aria-label*="Send" i]:not([disabled]),' +
+      'button[aria-label*="Submit" i]:not([disabled]),' +
+      'button[aria-label*="Надісл" i]:not([disabled]),' +
+      'button[aria-label*="Отправ" i]:not([disabled]),' +
+      'button.send-button:not([disabled]),' +
+      'button[data-testid="send-button"]:not([disabled]),' +
+      'button[type="submit"]:not([disabled])'
+    );
+    if (q) return q;
+    // 2) Icon-only send control with NO aria-label — DeepSeek/Qwen use a
+    //    div[role="button"], not a <button>. Pick an enabled, small, bottom-right
+    //    control that holds an svg, preferring a "send/primary/submit" class hint.
+    const cands = [].slice.call(document.querySelectorAll('button, [role="button"]')).filter((b) => {
+      if (b.disabled || b.getAttribute('aria-disabled') === 'true') return false;
+      const r = b.getBoundingClientRect();
+      return r.width > 14 && r.width < 72 && r.right > window.innerWidth * 0.55 &&
+             r.bottom > window.innerHeight * 0.30 && r.bottom < window.innerHeight * 0.92 && b.querySelector('svg');
+    });
+    const pref = cands.filter((b) => /send|primary|submit/i.test(b.className || ''));
+    return pref[0] || cands[cands.length - 1] || null;
+  }
+
   // sel = { findInput, findSend?, lastBlock, isStreaming? }
   async function runBridge(sel, prompt) {
     const input = await waitFor(sel.findInput, 15000);
     if (!input) throw new Error('composer not found');
     setText(input, prompt);
     await sleep(200);
-    // Prefer an enabled Send button if we can find one; otherwise Enter.
-    const btn = sel.findSend
-      ? await waitFor(() => { const b = sel.findSend(); return b && !b.disabled ? b : null; }, 3000)
-      : null;
+    // Prefer the provider's own Send selector; fall back to the locale-aware
+    // default set; Enter only as a last resort (synthetic Enter often won't
+    // submit — e.g. Gemini ignores it).
+    const btn = await waitFor(() => {
+      let b = sel.findSend ? sel.findSend() : null;
+      if (!b || b.disabled) b = findSendDefault();
+      return b && !b.disabled ? b : null;
+    }, 3000);
     if (btn) btn.click();
     else pressEnter(input);
     return await waitForCompletion(sel);
