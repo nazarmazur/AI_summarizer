@@ -86,6 +86,10 @@
     }
     walk(node, 0);
     out = out.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    // A list item whose text sits in a block child (<li><p>text</p></li>, which
+    // is how Gemini renders bullets) leaves the marker alone on its line —
+    // rejoin it with the text that follows so it reads as "- text".
+    out = out.replace(/^([ \t]*(?:[-*]|\d+\.))[ \t]*\n+(?=\S)/gm, '$1 ');
     return stripFollowups(out);
   }
 
