@@ -1238,13 +1238,16 @@ function reportHeightToParent() {
   if (window === window.top) return;     // only inside an embedding iframe
   let last = 0;
   const post = () => {
-    const h = Math.ceil(document.documentElement.scrollHeight);
+    // Measure the BODY's content height — document.documentElement.scrollHeight is
+    // floored at the iframe viewport height, so it can only grow the card, never
+    // shrink it back down to the actual content.
+    const h = Math.ceil(document.body.scrollHeight);
     if (h && Math.abs(h - last) > 2) {
       last = h;
       try { window.parent.postMessage({ type: 'AIS_HEIGHT', height: h }, '*'); } catch (_) {}
     }
   };
-  try { new ResizeObserver(post).observe(document.documentElement); } catch (_) {}
+  try { new ResizeObserver(post).observe(document.body); } catch (_) {}
   window.addEventListener('load', post);
   post();
 }
