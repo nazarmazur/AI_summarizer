@@ -145,6 +145,21 @@ async function runBridge(provider, prompt) {
 // `streaming` controls whether we surface deltas to the caller.
 // ---------------------------------------------------------------------------
 
+// Web chat UIs (unlike the REST API) tend to answer conversationally: they add a
+// greeting/preamble, sometimes drop the Markdown structure, and append trailing
+// "what next?" suggestion chips. Verified live: Gemini-web DOES honour an explicit
+// "## " instruction. So for the browser-session path we append a hard formatting
+// contract — keep ## subheadings + **bold**, no preamble, no follow-ups — so its
+// output matches the API path. (The scraper already converts <h2>/<strong>; this
+// just makes the model actually emit them.)
+function bridgePrompt(prompt) {
+  return prompt +
+    '\n\n---\nOUTPUT FORMAT (strict): reply with ONLY the requested content as clean ' +
+    'Markdown. Begin every section with a "## " subheading and keep all **bold**. ' +
+    'Do NOT add any greeting, preamble, or closing remark, and do NOT append any ' +
+    'follow-up questions or suggestions after the content.';
+}
+
 async function complete({ prompt, source, modelKey, provider, keys, onDelta, allowFallback, attachments }) {
   // Pool route: go through our Edge Function. Attachments work there too.
   if (source === 'pool') {
@@ -176,7 +191,7 @@ async function complete({ prompt, source, modelKey, provider, keys, onDelta, all
     const muted = await isMuted(provider);
     if (!muted) {
       try {
-        const text = await runBridge(provider, prompt);
+        const text = await runBridge(provider, bridgePrompt(prompt));
         await recordSuccess(provider);
         if (onDelta) onDelta(text);
         return { text, via: 'browser' };

@@ -21,6 +21,7 @@ Free AI summaries for YouTube, any article, or PDF — with Gemini, GPT, or Clau
 ✦ **Pick your AI — not just Gemini**
  • Use your own API key from Google Gemini, OpenAI, or Anthropic
  • Newest models supported: Gemini 2.5 / 3.x Flash & Pro, GPT-4o / GPT-5 family, Claude Haiku / Sonnet / Opus / Fable
+ • Or **no key at all** — optional browser-session mode reuses your already-signed-in tab on Gemini, ChatGPT, Claude, Grok, DeepSeek, Qwen, Kimi, or Perplexity
  • No account and no subscription — you only pay your AI provider for what you use
 
 ✦ **Docked side panel**
@@ -51,7 +52,7 @@ A free, bring-your-own-key alternative to Eightify/Glasp that works on videos, a
 | activeTab | Access the page you're on when you click the action. |
 | sidePanel | Open the summarizer in Chrome's docked side panel. |
 | host: youtube.com, vimeo.com, twitch.tv, tiktok.com, instagram.com, x.com / twitter.com | Add the summarize UI and read video transcripts/captions on these sites. |
-| host: gemini.google.com, chatgpt.com, claude.ai | Optional "browser-session" mode: drive your already-signed-in AI tab instead of using an API key. |
+| host: gemini.google.com, chatgpt.com, claude.ai, grok.com, chat.deepseek.com, chat.qwen.ai, kimi.com, perplexity.ai | Optional "browser-session" mode: type your prompt into your already-signed-in AI tab and read the reply back, instead of using an API key. |
 | host: generativelanguage.googleapis.com, api.openai.com, api.anthropic.com | Send the content + your prompt directly to the AI provider you selected. |
 | **optional** host: `<all_urls>` | Read a regular web page or PDF you choose to summarize. Requested **on demand** as a one-time per-site prompt when you summarize a non-video page — never at install. |
 
