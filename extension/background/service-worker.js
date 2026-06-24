@@ -228,6 +228,13 @@ async function complete({ prompt, source, modelKey, provider, keys, onDelta, all
         const text = await generateStream(prompt, alt.modelKey, onDelta);
         return { text, via: 'api-alt', provider: alt.provider };
       }
+      // No alternate API key — automatically fall back to browser-session mode
+      // (best logged-in, non-muted bridge). Only for the main user-facing call
+      // (onDelta present), never for silent map-reduce chunk calls.
+      if (onDelta) {
+        const fb = await tryBrowserFallback(prompt, provider, onDelta);
+        if (fb) return fb;
+      }
       const err = new Error(e.message);
       err.code = 'QUOTA_NO_ALT'; err.provider = provider;
       err.retryAfter = getRetryAfterSeconds(e);
@@ -251,6 +258,44 @@ function altProviderModel(provider, keys) {
     if (pickKeyForProvider(p, keys)) {
       return { provider: p, modelKey: p === 'openai' ? 'gpt' : (p === 'anthropic' ? 'claude' : 'gemini') };
     }
+  }
+  return null;
+}
+
+// Providers that have a browser-session bridge, in default preference order.
+const BRIDGE_PROVIDERS = ['gemini', 'openai', 'anthropic', 'grok', 'deepseek', 'qwen', 'kimi', 'perplexity'];
+
+async function bridgeTabOpen(provider) {
+  const url = BRIDGE_URL[provider];
+  if (!url) return false;
+  try {
+    const host = new URL(url).host;
+    const tabs = await chrome.tabs.query({ url: `https://${host}/*` });
+    return !!(tabs && tabs.length);
+  } catch (_) { return false; }
+}
+
+// API quota exhausted AND no alternate API key → fall back to browser-session
+// automatically. Pick the "best" bridge: the failed provider's own chat site
+// first (e.g. OpenAI API quota → ChatGPT), then any AI site the user already has
+// OPEN (i.e. is logged into). Skip muted (recently-broken) bridges and advance to
+// the next on failure — "if one bridge is broken, pick another". Returns the
+// result, or null if nothing answered (caller then surfaces QUOTA_NO_ALT for the
+// manual picker). We deliberately do NOT blindly open all 8 sites — only the
+// failed provider's site plus already-open tabs — to avoid a tab-spawning storm.
+async function tryBrowserFallback(prompt, failedProvider, onDelta) {
+  const order = [];
+  const add = (p) => { if (p && BRIDGE_URL[p] && !order.includes(p)) order.push(p); };
+  add(failedProvider);
+  for (const p of BRIDGE_PROVIDERS) { if (await bridgeTabOpen(p)) add(p); }
+  for (const p of order) {
+    if (await isMuted(p)) continue;
+    try {
+      const text = await runBridge(p, bridgePrompt(prompt));
+      await recordSuccess(p);
+      if (onDelta) onDelta(text);
+      return { text, via: 'browser-fallback', provider: p };
+    } catch (e) { await recordFailure(p, e); }
   }
   return null;
 }

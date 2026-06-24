@@ -137,6 +137,8 @@
   "loadingChunk":       { "message": "Аналізую секцію $DONE$ з $TOTAL$…", "placeholders": { "done": { "content": "$1" }, "total": { "content": "$2" } } },
   "loadingSynthesis":   { "message": "Об'єдную секції в фінальний підсумок…" },
   "bannerApiFallback":  { "message": "Не вдалось використати браузерну сесію $PROVIDER$ — переключилися на API.", "placeholders": { "provider": { "content": "$1" } } },
+  "bannerQuotaAltKey":  { "message": "Ліміт API вичерпано — перемкнулися на ваш ключ $PROVIDER$.", "placeholders": { "provider": { "content": "$1" } } },
+  "bannerQuotaBrowser": { "message": "Ліміт API вичерпано — перемкнулися на браузерну сесію ($PROVIDER$).", "placeholders": { "provider": { "content": "$1" } } },
   "errorNoTranscript":  { "message": "У цього відео немає субтитрів." },
   "errorCaptionsBlocked": { "message": "YouTube заблокував доступ до субтитрів цього відео. Спробуйте інше відео, статтю або PDF." },
   "errorNoApiKey":      { "message": "Додайте API-ключ у налаштуваннях або оберіть Браузерну сесію." },

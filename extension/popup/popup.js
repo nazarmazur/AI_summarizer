@@ -836,12 +836,17 @@ chatForm.addEventListener('submit', (e) => {
 // PDF picker state — when user uploads a PDF from disk we cache the bytes here
 let pendingPdf = null;   // { bytes: Uint8Array, name: string }
 
-function cacheSig(kind) {
+function cacheSig(kind, keysSig) {
   const srcId = pendingPdf
     ? ('pdf:' + (pendingPdf.name || '') + ':' + (pendingPdf.bytes ? pendingPdf.bytes.length : 0))
     : urlInput.value.trim();
   return [srcId, kind, settings.language, settings.length, settings.model,
-          settings.templateId || 'standard', settings.source || 'api'].join('|');
+          settings.templateId || 'standard', settings.source || 'api',
+          // Which API keys are configured. Without this a model='auto' result
+          // stays cached after the user adds/switches a key — even though 'auto'
+          // now resolves to a different provider — so they'd see the stale
+          // summary instead of a fresh run (the bug this fixes).
+          keysSig || ''].join('|');
 }
 
 // Webpages / PDFs aren't in our static host_permissions. When the user asks to
@@ -869,7 +874,14 @@ async function run(kind, opts) {
   }
   // v1.0.x free build: no sign-in flow exists. BYOK only.
 
-  const runSig = cacheSig(kind);
+  // Fingerprint the configured keys so a model='auto' cache entry is invalidated
+  // when the user adds/switches a key (the provider 'auto' picks may change).
+  let keysSig = '';
+  try {
+    const kNow = await getApiKeys();
+    keysSig = (kNow.gemini ? 'g' : '') + (kNow.openai ? 'o' : '') + (kNow.anthropic ? 'a' : '');
+  } catch (_) {}
+  const runSig = cacheSig(kind, keysSig);
 
   // Instant cache hit — toggling Summary ⇄ Timestamps (same source & settings)
   // re-shows the prior result without re-fetching captions or re-calling the model.
@@ -973,11 +985,15 @@ async function run(kind, opts) {
     if (msg.type === 'AIS_DONE') {
       if (msg.result) resultCache.set(runSig, { result: msg.result, payload });
       renderFinal(msg.result, kind);
-      // Show banner if we fell back to the direct API (e.g. pool unavailable).
-      if (msg.result && msg.result.via === 'api-fallback') {
+      // Notify the user when the run fell back so they know which provider/mode
+      // actually ran: pool→API, quota→another API key, or quota→browser-session.
+      const fbVia = msg.result && msg.result.via;
+      if (fbVia === 'api-fallback' || fbVia === 'api-alt' || fbVia === 'browser-fallback') {
         const provName = (msg.result.provider || '').toUpperCase();
-        fallbackBanner.textContent =
-          t('bannerApiFallback', [provName]) || ('Switched to API (' + provName + ')');
+        const bKey = fbVia === 'api-alt' ? 'bannerQuotaAltKey'
+                   : fbVia === 'browser-fallback' ? 'bannerQuotaBrowser'
+                   : 'bannerApiFallback';
+        fallbackBanner.textContent = t(bKey, [provName]) || ('Switched to ' + provName);
         fallbackBanner.hidden = false;
       } else {
         fallbackBanner.hidden = true;

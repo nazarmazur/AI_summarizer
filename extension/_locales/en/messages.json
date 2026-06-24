@@ -137,6 +137,8 @@
   "loadingChunk":       { "message": "Analysing section $DONE$ of $TOTAL$…", "placeholders": { "done": { "content": "$1" }, "total": { "content": "$2" } } },
   "loadingSynthesis":   { "message": "Combining sections into the final summary…" },
   "bannerApiFallback":  { "message": "Couldn't use $PROVIDER$ browser session — switched to API.", "placeholders": { "provider": { "content": "$1" } } },
+  "bannerQuotaAltKey":  { "message": "API limit reached — switched to your $PROVIDER$ key.", "placeholders": { "provider": { "content": "$1" } } },
+  "bannerQuotaBrowser": { "message": "API limit reached — switched to browser session ($PROVIDER$).", "placeholders": { "provider": { "content": "$1" } } },
   "errorNoTranscript":  { "message": "This video has no subtitles." },
   "errorCaptionsBlocked": { "message": "YouTube blocked caption access for this video. Try another video, an article, or a PDF." },
   "errorNoApiKey":      { "message": "Add an API key in settings, or pick Browser session." },
