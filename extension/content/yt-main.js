@@ -27,12 +27,16 @@
   // we intercept the PLAYER's own timedtext request (which carries a valid POT)
   // and keep its response. We install the hooks at document_start so we catch
   // every caption fetch the player makes.
-  const __caps = []; // { lang, tlang, body }
+  const __caps = []; // { vid, lang, tlang, body }
   function recordCap(url, body) {
     if (!body || body.length < 20) return;
     let lang = '', tlang = '';
     try { const u = new URL(url, location.origin); lang = u.searchParams.get('lang') || ''; tlang = u.searchParams.get('tlang') || ''; } catch (_) { /* ignore */ }
-    __caps.push({ lang, tlang, body });
+    // Tag each capture with the video it belongs to. YouTube is a SPA — navigating
+    // watch→watch does NOT reload this script, so __caps would otherwise keep the
+    // previous video's captions and findCap (matching by language) could hand back
+    // the WRONG video's transcript. (currentVideoId is hoisted — defined below.)
+    __caps.push({ vid: currentVideoId(), lang, tlang, body });
     if (__caps.length > 8) __caps.shift();
   }
   try {
@@ -58,13 +62,30 @@
   } catch (_) { /* ignore */ }
 
   function findCap(lang, tlang) {
+    const vid = currentVideoId();
     for (let i = __caps.length - 1; i >= 0; i--) {
       const c = __caps[i];
+      // Only reuse a capture from the CURRENT video. Without this, after a SPA
+      // navigation the previous video's same-language captions would be returned
+      // (observed live: an MCU video summarized with the prior Bible video's
+      // transcript). If we can't resolve the id, fall back to language matching.
+      if (vid && c.vid && c.vid !== vid) continue;
       if (tlang) { if (c.tlang === tlang) return c.body; }
       else if (!c.tlang && (!lang || c.lang === lang)) return c.body;
     }
     return null;
   }
+
+  // On SPA navigation to a different video, drop the previous video's captured
+  // captions outright (defence-in-depth alongside the per-video scope above, and
+  // it frees memory). yt-navigate-finish fires in the page/MAIN world.
+  let __lastVid = currentVideoId();
+  try {
+    window.addEventListener('yt-navigate-finish', () => {
+      const v = currentVideoId();
+      if (v && v !== __lastVid) { __lastVid = v; __caps.length = 0; }
+    });
+  } catch (_) { /* ignore */ }
   function waitForCap(lang, tlang, beforeLen, timeoutMs) {
     return new Promise((resolve) => {
       const deadline = Date.now() + timeoutMs;
