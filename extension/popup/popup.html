@@ -141,8 +141,10 @@
 
     <!-- Follow-up chat -->
     <div class="chat" id="chat" hidden>
-      <div class="chat-suggest" id="chatSuggestions" hidden></div>
       <div class="chat-history" id="chatHistory"></div>
+      <!-- Suggested follow-ups sit BELOW the conversation (under the latest
+           answer, just above the input) — more logical than floating on top. -->
+      <div class="chat-suggest" id="chatSuggestions" hidden></div>
       <form class="chat-form" id="chatForm" autocomplete="off">
         <input type="text" id="chatInput" data-i18n-attr="placeholder:chatPlaceholder" />
         <button type="submit" class="chat-send" id="chatSendBtn" data-i18n-attr="title:chatSend" title="">

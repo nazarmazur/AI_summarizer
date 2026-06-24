@@ -215,14 +215,19 @@ export function buildChatTurnPrompt({ systemPrompt, history, question }) {
 }
 
 // Suggest a few content-specific starter questions for the Q&A chat.
-export function buildSuggestQuestionsPrompt({ title, content, summary, language }) {
+export function buildSuggestQuestionsPrompt({ title, content, summary, language, asked }) {
   const lang = (!language || language === 'auto') ? 'the same language as the content' : langName(language);
+  const askedList = (Array.isArray(asked) ? asked : []).slice(-10).filter(Boolean);
+  const avoidRule = askedList.length
+    ? `- Do NOT repeat or rephrase any of these already-asked questions — explore genuinely new angles instead:\n${askedList.map((q) => '    • ' + q).join('\n')}`
+    : null;
   return [
     `Based on the content below${title ? ` ("${title}")` : ''}, suggest exactly 5 short, specific questions a curious viewer would want answered.`,
     `Rules:`,
     `- Each question must be answerable from this content.`,
     `- Under 12 words each. Make them genuinely interesting, not generic.`,
     `- Write them in ${lang}.`,
+    avoidRule,
     `- Output ONLY the 5 questions, one per line, with NO numbering, bullets, quotes, or extra text.`,
     ``,
     `Summary:`,
@@ -232,7 +237,7 @@ export function buildSuggestQuestionsPrompt({ title, content, summary, language 
     `"""`,
     (content || '').slice(0, 4000),
     `"""`,
-  ].join('\n');
+  ].filter((l) => l !== null).join('\n');
 }
 
 // ---------------------------------------------------------------------------

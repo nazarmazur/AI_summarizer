@@ -786,6 +786,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           content:  ctx.content,
           summary:  ctx.summary,
           language: msg.language || 'auto',
+          asked:    msg.asked || [],
         });
         // Don't drive the browser bridge for a background suggestion — use the
         // API/pool path (falls back gracefully to nothing if no key).

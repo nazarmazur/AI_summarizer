@@ -672,6 +672,7 @@ function renderFinal(result, kind) {
   if (currentSourceKey) {
     chatBox.hidden = false;
     chatHistory.innerHTML = '';
+    askedQuestions = [];               // new source → fresh question history
     chatInput.value = '';
     chatInput.disabled = false;
     chatSendBtn.disabled = false;
@@ -686,6 +687,7 @@ function renderFinal(result, kind) {
 let currentSourceKey  = null;
 let currentSourceKind = 'webpage';
 let suggestionsLoadedFor = null;   // source key we've already fetched starter questions for
+let askedQuestions = [];           // questions asked for this source — excluded from refreshed suggestions
 let chatStreamingBubble = null;
 let chatActivePort = null;
 
@@ -701,6 +703,9 @@ function addBubble(role, html) {
 function sendChatQuestion(question) {
   if (!currentSourceKey) return;
   if (chatActivePort) { try { chatActivePort.disconnect(); } catch (_) {} chatActivePort = null; }
+
+  // Remember what's been asked so refreshed suggestions don't repeat it.
+  if (question) askedQuestions.push(question);
 
   // User bubble (plain text — no markdown)
   addBubble('user', escHTML(question));
@@ -792,6 +797,7 @@ function loadSuggestions() {
     modelKey:  settings.model,
     language:  settings.language,
     source:    settings.source || 'api',
+    asked:     askedQuestions.slice(-10),   // tell the model not to repeat these
   }, (resp) => {
     if (chrome.runtime.lastError) { if (suggestionsLoadedFor === forKey) suggestionsLoadedFor = null; return; }
     if (forKey !== currentSourceKey) return;               // a newer summary started
@@ -799,8 +805,22 @@ function loadSuggestions() {
       if (suggestionsLoadedFor === forKey) suggestionsLoadedFor = null;   // allow a later retry
       return;
     }
+    // Safety net for the prompt rule: drop any suggestion that's a near-duplicate
+    // of one already asked (token overlap ≥60% — catches e.g. "Is atheism a belief
+    // system?" vs "Is atheism considered a belief system?"). Unicode-aware so it
+    // works for Cyrillic/Ukrainian too.
+    const norm = (s) => String(s).toLowerCase().replace(/[^\p{L}\p{N} ]/gu, '').replace(/\s+/g, ' ').trim();
+    const toks = (s) => new Set(norm(s).split(' ').filter(Boolean));
+    const tooSimilar = (a, b) => {
+      const A = toks(a), B = toks(b);
+      if (!A.size || !B.size) return false;
+      let inter = 0; A.forEach((t) => { if (B.has(t)) inter++; });
+      return inter / Math.min(A.size, B.size) >= 0.6;
+    };
+    const fresh = resp.questions.filter((q) => q && !askedQuestions.some((a) => tooSimilar(q, a)));
+    if (!fresh.length) { if (suggestionsLoadedFor === forKey) suggestionsLoadedFor = null; return; }
     chatSuggest.innerHTML = '';
-    resp.questions.forEach((q) => {
+    fresh.forEach((q) => {
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'suggest-chip';
