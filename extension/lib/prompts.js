@@ -216,7 +216,7 @@ export function buildChatTurnPrompt({ systemPrompt, history, question }) {
 
 // Suggest a few content-specific starter questions for the Q&A chat.
 export function buildSuggestQuestionsPrompt({ title, content, summary, language }) {
-  const lang = (!language || language === 'auto') ? 'the same language as the content' : language;
+  const lang = (!language || language === 'auto') ? 'the same language as the content' : langName(language);
   return [
     `Based on the content below${title ? ` ("${title}")` : ''}, suggest exactly 5 short, specific questions a curious viewer would want answered.`,
     `Rules:`,
