@@ -149,14 +149,19 @@
       'button[type="submit"]:not([disabled])'
     );
     if (q) return q;
-    // 2) Icon-only send control with NO aria-label — DeepSeek/Qwen use a
-    //    div[role="button"], not a <button>. Pick an enabled, small, bottom-right
-    //    control that holds an svg, preferring a "send/primary/submit" class hint.
-    const cands = [].slice.call(document.querySelectorAll('button, [role="button"]')).filter((b) => {
+    // 2) Icon-only send control with NO aria-label — sites use varied elements:
+    //    DeepSeek a div[role="button"], Kimi a plain div.send-button-container.
+    //    Pick an enabled, small, right-side control that holds an svg, preferring
+    //    a "send/primary/submit" class hint.
+    const cands = [].slice.call(document.querySelectorAll('button, [role="button"], [class*="send" i], [class*="submit" i]')).filter((b) => {
       if (b.disabled || b.getAttribute('aria-disabled') === 'true') return false;
+      // Never mistake the mic/voice/attach controls for Send (e.g. Perplexity's
+      // bottom-right button is voice — clicking it opens dictation, not submit).
+      const hint = ((b.getAttribute('aria-label') || '') + ' ' + (b.className || '') + ' ' + (b.getAttribute('title') || '')).toLowerCase();
+      if (/mic|voice|audio|record|dictat|speech|attach|upload|camera|image|микрофон|мікрофон|голос|запис/.test(hint)) return false;
       const r = b.getBoundingClientRect();
-      return r.width > 14 && r.width < 72 && r.right > window.innerWidth * 0.55 &&
-             r.bottom > window.innerHeight * 0.30 && r.bottom < window.innerHeight * 0.92 && b.querySelector('svg');
+      return r.width > 14 && r.width < 80 && r.right > window.innerWidth * 0.5 &&
+             r.top > 120 && r.bottom < window.innerHeight * 0.95 && b.querySelector('svg');
     });
     const pref = cands.filter((b) => /send|primary|submit/i.test(b.className || ''));
     return pref[0] || cands[cands.length - 1] || null;
