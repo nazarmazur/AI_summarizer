@@ -79,8 +79,12 @@ function chunkThresholdFor(provider, source) {
   if (source === 'browser') return BROWSER_CHUNK_THRESHOLD;
   return CHUNK_THRESHOLD[provider] || DEFAULT_CHUNK_THRESHOLD;
 }
-const CHUNK_TARGET    = 25_000;   // chars per chunk for map-reduce
-const CHUNK_CONCURRENCY = 3;      // parallel chunk requests
+const CHUNK_TARGET    = 40_000;   // chars per chunk for map-reduce (~10k tokens —
+                                  // bigger chunks = fewer calls + more context per
+                                  // chunk; only matters for transcripts past the
+                                  // per-provider single-shot threshold above)
+const CHUNK_CONCURRENCY = 3;      // parallel chunk requests (kept at 3 to avoid
+                                  // bursting the free-tier requests-per-minute cap)
 
 // ---------------------------------------------------------------------------
 // Browser-session bridge
