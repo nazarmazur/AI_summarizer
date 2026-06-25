@@ -3,6 +3,16 @@
 > This copy matches the shipped free build: bring-your-own-key, **no account,
 > no subscription, no Pro tier, no pricing**. Do not add billing/sign-in claims
 > unless the build actually ships them.
+>
+> ⚠️ **Keyword-spam policy (caused the "Yellow Argon" rejection).** In the product
+> **description** (each locale): list **at most 5** third-party brands/sites inline
+> and don't repeat any single keyword **>5×**. So name only a few video sites
+> ("YouTube, Vimeo, Twitch and more") and the 3 API providers (Gemini, OpenAI,
+> Anthropic) — describe browser-session mode generically ("your signed-in AI chat
+> tab"), don't enumerate all 8 AI sites, and don't name competitors. The full
+> 8-site list belongs ONLY in the Privacy-practices permission justifications (a
+> separate field), not the description. Refs:
+> developer.chrome.com/docs/webstore/program-policies/spam-faq#keyword-spam
 
 ## English
 
@@ -11,17 +21,16 @@ Free AI summaries for YouTube, any article, or PDF — with Gemini, GPT, or Clau
 
 ### Detailed description
 
-**Smart AI Summarizer turns any YouTube video, article, web page, or PDF into a clean summary in seconds — then lets you ask questions about it. Not just YouTube, and not just one AI.**
+**Smart AI Summarizer turns any video, article, web page, or PDF into a clean summary in seconds — then lets you ask questions about it. Works on far more than just video.**
 
-✦ **Works everywhere — not only YouTube**
- • YouTube, Vimeo, Twitch, TikTok, Instagram, X
+✦ **Works on more than just video**
+ • Major video sites — YouTube, Vimeo, Twitch and more
  • Any blog, news article, or web page
- • PDFs by URL or file upload (scans too, via Gemini's native vision)
+ • PDFs by URL or file upload (scanned PDFs too, via vision models)
 
-✦ **Pick your AI — not just Gemini**
+✦ **Bring your own AI**
  • Use your own API key from Google Gemini, OpenAI, or Anthropic
- • Newest models supported: Gemini 2.5 / 3.x Flash & Pro, GPT-4o / GPT-5 family, Claude Haiku / Sonnet / Opus / Fable
- • Or **no key at all** — optional browser-session mode reuses your already-signed-in tab on Gemini, ChatGPT, Claude, Grok, DeepSeek, Qwen, Kimi, or Perplexity
+ • Or no key at all — optional browser-session mode reuses your already-signed-in AI chat tab
  • No account and no subscription — you only pay your AI provider for what you use
 
 ✦ **Docked side panel**
@@ -40,7 +49,7 @@ Free AI summaries for YouTube, any article, or PDF — with Gemini, GPT, or Clau
  Your API key is stored only in your browser (chrome.storage.local) and is sent only to the AI provider you chose. No first-party server, no analytics, no trackers, no resold data. The extension reads a page's content only after you ask it to summarize.
 
 ### Single-sentence pitch
-A free, bring-your-own-key alternative to Eightify/Glasp that works on videos, articles, and PDFs — with your choice of Gemini, GPT, or Claude — and lets you chat about them.
+A free, bring-your-own-key AI summarizer for videos, articles, and PDFs that also answers your follow-up questions.
 
 ### Permissions justification (for store review)
 
@@ -93,16 +102,16 @@ A free, bring-your-own-key alternative to Eightify/Glasp that works on videos, a
 
 ### Детальний опис
 
-**Smart AI Summarizer перетворює будь-яке відео, статтю, вебсторінку чи PDF на стислий підсумок за секунди — і дозволяє ставити запитання. Не лише YouTube і не лише один AI.**
+**Smart AI Summarizer перетворює будь-яке відео, статтю, вебсторінку чи PDF на стислий підсумок за секунди — і дозволяє ставити запитання.**
 
-✦ **Працює всюди — не лише YouTube**
- • YouTube, Vimeo, Twitch, TikTok, Instagram, X
+✦ **Не лише відео**
+ • Популярні відеосайти — YouTube, Vimeo, Twitch та інші
  • Будь-який блог, новина чи вебсторінка
- • PDF за URL або файлом (зокрема скани, через Gemini)
+ • PDF за URL або файлом (зокрема скани)
 
-✦ **Обирайте свій AI — не лише Gemini**
+✦ **Власний AI**
  • Власний ключ Google Gemini, OpenAI або Anthropic
- • Найновіші моделі: Gemini 2.5 / 3.x, GPT-4o / GPT-5, Claude Haiku / Sonnet / Opus / Fable
+ • Або зовсім без ключа — опційний browser-session режим використовує вашу вже залогінену вкладку AI-чату
  • Без акаунта й без підписки — платите лише своєму AI-провайдеру за використання
 
 ✦ **Докована бічна панель**
@@ -129,11 +138,11 @@ A free, bring-your-own-key alternative to Eightify/Glasp that works on videos, a
 
 ### Подробное описание
 
-**Smart AI Summarizer превращает любое видео, статью, веб-страницу или PDF в краткую сводку за секунды — и позволяет задавать вопросы. Не только YouTube и не только один AI.**
+**Smart AI Summarizer превращает любое видео, статью, веб-страницу или PDF в краткую сводку за секунды — и позволяет задавать вопросы.**
 
-✦ **Работает везде — не только YouTube** — YouTube, Vimeo, Twitch, TikTok, Instagram, X, любые статьи и веб-страницы, PDF (URL и файлы).
+✦ **Не только видео** — популярные видеосайты (YouTube, Vimeo, Twitch и другие), любые статьи и веб-страницы, PDF (URL и файлы).
 
-✦ **Выберите AI — не только Gemini** — свой ключ Google Gemini, OpenAI или Anthropic; новейшие модели (Gemini 2.5/3.x, GPT-4o/GPT-5, Claude Haiku/Sonnet/Opus/Fable). Без аккаунта и подписки.
+✦ **Свой AI** — свой ключ Google Gemini, OpenAI или Anthropic; либо без ключа — опциональный browser-session режим использует вашу уже залогиненную вкладку AI-чата. Без аккаунта и подписки.
 
 ✦ **Док-панель сбоку** — клик по иконке открывает саммарайзер рядом со страницей.
 
