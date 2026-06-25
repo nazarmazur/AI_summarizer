@@ -567,6 +567,7 @@ let activePort = null;          // current chrome.runtime.Port, or null
 let streamedText = '';          // accumulated text so far
 let streamedMeta = null;        // { videoId, model, provider, title, channel }
 let rerenderScheduled = false;  // microtask batching for renderProgress
+let streamingLive = false;      // true only while a run streams — gates a late renderProgress
 let lastResult = null;          // full result object — used for export
 // Per (source + kind + settings) result cache so toggling Summary ⇄ Timestamps
 // (or back) re-shows the computed result instantly instead of re-running.
@@ -581,6 +582,7 @@ function cancelActiveStream() {
 }
 
 function setStreamingUI(streaming) {
+  streamingLive = streaming;
   if (!stopBtn || !regenBtn) return;
   stopBtn.hidden  = !streaming;
   regenBtn.hidden =  streaming;
@@ -596,6 +598,7 @@ function scheduleRerender(kind) {
 }
 
 function renderProgress(kind) {
+  if (!streamingLive) return;     // a late rAF fired after the run finished — don't re-add the cursor
   const videoId = streamedMeta && streamedMeta.videoId;
   // Show a soft "▍" cursor while streaming.
   const html = renderMarkdown(streamedText, videoId) + '<span class="ais-cursor">▍</span>';

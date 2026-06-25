@@ -438,8 +438,8 @@ body.dark .ts-pill:hover { background: #3a3548; color: #c4b5fd; }
 /* ============================================================ chat */
 
 .chat {
-  margin-top: 14px;
-  padding-top: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
 }
 .chat-history {
