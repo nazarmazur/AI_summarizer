@@ -1484,22 +1484,69 @@ function detectEmbedContext() {
   }
 }
 
+// Point the panel at a different page: update the URL field + source chip, and
+// either restore a summary we already cached for it (so each tab "remembers" its
+// result, like a tab-bound panel) or reset to the ready state. No-op for the same
+// URL or anything we can't summarize (chrome://, new-tab, etc.).
+async function retargetTo(url) {
+  if (!url || !/^(https?|file):/i.test(url)) return;
+  if (url === urlInput.value) return;
+  if (detectKindLocal(url).kind === 'unknown') return;
+  pendingPdf = null;
+  urlInput.value = url;
+  updateSourceChip(url);
+  cancelActiveStream();
+  fallbackBanner.hidden = true;
+  // Restore a cached summary for this page + current settings if we have one.
+  try {
+    const kNow = await getApiKeys();
+    const keysSig = (kNow.gemini ? 'g' : '') + (kNow.openai ? 'o' : '') + (kNow.anthropic ? 'a' : '');
+    const sig = cacheSig('summary', keysSig);
+    if (resultCache.has(sig)) {
+      const hit = resultCache.get(sig);
+      lastJob = { kind: 'summary', payload: hit.payload };
+      renderFinal(hit.result, 'summary');
+      showState('result');
+      return;
+    }
+  } catch (_) {}
+  chatBox.hidden = true;
+  showState('empty');
+}
+
+// Side panel only: bind the panel to the active tab like Claude-in-Chrome. When the
+// user switches tabs OR the active tab navigates to a new page/PDF/video, re-target
+// the panel to whatever is now in front.
+function followActiveTab() {
+  const isPanel = new URLSearchParams(location.search).get('panel') === '1';
+  if (!isPanel || !chrome.tabs || !chrome.tabs.onActivated) return;
+  let timer = 0;
+  const sync = () => {
+    clearTimeout(timer);                       // debounce rapid switch/navigation bursts
+    timer = setTimeout(async () => {
+      try {
+        const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        const url = tabs && tabs[0] && tabs[0].url;
+        if (url) retargetTo(url);
+      } catch (_) {}
+    }, 120);
+  };
+  chrome.tabs.onActivated.addListener(sync);
+  chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+    if ((info.url || info.status === 'complete') && tab && tab.active) sync();
+  });
+  if (chrome.windows && chrome.windows.onFocusChanged) chrome.windows.onFocusChanged.addListener(sync);
+}
+
 function listenForThemeMessages() {
   window.addEventListener('message', (e) => {
     if (e && e.data && e.data.type === 'AIS_THEME') {
       document.body.classList.toggle('dark', !!e.data.dark);
       return;
     }
-    // Listen for URL updates from the parent page (e.g., YouTube Shorts watcher)
+    // URL updates from the parent page (e.g. the YouTube Shorts watcher) — re-target.
     if (e && e.data && e.data.type === 'AIS_URL' && typeof e.data.url === 'string') {
-      // Update the URL input field to the new short's URL
-      urlInput.value = e.data.url;
-      updateSourceChip(e.data.url);
-      // Clear any stale result/error state so user can summarize the new short
-      cancelActiveStream();
-      showState('empty');
-      fallbackBanner.hidden = true;
-      chatBox.hidden = true;
+      retargetTo(e.data.url);
       return;
     }
   });
@@ -1533,6 +1580,7 @@ async function init() {
     await buildTemplateMenu().catch(() => {});
     updateChips();
     await prefillFromActiveTab().catch(() => {});
+    followActiveTab();   // side panel: track the active tab like Claude-in-Chrome
 
     if (HAS_PRO) {
       // Pro builds: resolve real tier; free builds already set 'pro' above.
