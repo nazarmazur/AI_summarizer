@@ -60,7 +60,25 @@ const BRIDGE_URL = {
   kimi:       'https://www.kimi.com/',
   perplexity: 'https://www.perplexity.ai/',
 };
-const CHUNK_THRESHOLD = 45_000;   // chars; below this we go single-shot
+// Single-shot vs map-reduce threshold, in CHARS of transcript. Above it we split
+// into chunks (slower, more API calls); below it we summarize in ONE streamed call
+// (faster, cheaper, far fewer requests — friendlier to free-tier quotas). Set PER
+// PROVIDER so a single-shot call never exceeds the model's context window, with
+// generous headroom for the prompt + output:
+//   Gemini Flash ~1M tokens, Claude ~200k, gpt-4o ~128k  (~4 chars/token).
+const CHUNK_THRESHOLD = {
+  gemini:    500_000,   // ~125k tokens — tiny fraction of Flash's 1M window
+  anthropic: 350_000,   // ~88k tokens  — well under Claude's 200k
+  openai:    250_000,   // ~62k tokens  — safe under gpt-4o's 128k
+};
+const DEFAULT_CHUNK_THRESHOLD = 45_000;   // unknown provider / pool route
+// Browser-session pastes the transcript into a web chat composer — huge pastes are
+// fragile there, so cap lower regardless of provider (still ~2h of video single-shot).
+const BROWSER_CHUNK_THRESHOLD = 120_000;
+function chunkThresholdFor(provider, source) {
+  if (source === 'browser') return BROWSER_CHUNK_THRESHOLD;
+  return CHUNK_THRESHOLD[provider] || DEFAULT_CHUNK_THRESHOLD;
+}
 const CHUNK_TARGET    = 25_000;   // chars per chunk for map-reduce
 const CHUNK_CONCURRENCY = 3;      // parallel chunk requests
 
@@ -443,7 +461,7 @@ async function runJobStream(payload, hooks) {
   // ── 3. Build prompt ────────────────────────────────────────────────────
   const isVideoTranscript = !!sourceObj.timecoded;
   const transcriptBody = sourceObj.text || '';
-  const isLong = transcriptBody.length > CHUNK_THRESHOLD;
+  const isLong = transcriptBody.length > chunkThresholdFor(chosen.provider, source);
   const title   = sourceObj.title || '';
   const channel = sourceObj.author || sourceObj.site || '';
 
