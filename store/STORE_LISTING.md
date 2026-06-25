@@ -24,9 +24,9 @@ Free AI summaries for YouTube, any article, or PDF — with Gemini, GPT, or Clau
 **Smart AI Summarizer turns any video, article, web page, or PDF into a clean summary in seconds — then lets you ask questions about it. Works on far more than just video.**
 
 ✦ **Works on more than just video**
- • Major video sites — YouTube, Vimeo, Twitch and more
- • Any blog, news article, or web page
- • PDFs by URL or file upload (scanned PDFs too, via vision models)
+ • Full transcript summaries for YouTube and Vimeo videos
+ • TikTok, Instagram, and X: summarizes the post's caption/description
+ • Any blog, news article, or web page — plus PDFs by URL or file upload
 
 ✦ **Bring your own AI**
  • Use your own API key from Google Gemini, OpenAI, or Anthropic
@@ -105,9 +105,9 @@ A free, bring-your-own-key AI summarizer for videos, articles, and PDFs that als
 **Smart AI Summarizer перетворює будь-яке відео, статтю, вебсторінку чи PDF на стислий підсумок за секунди — і дозволяє ставити запитання.**
 
 ✦ **Не лише відео**
- • Популярні відеосайти — YouTube, Vimeo, Twitch та інші
- • Будь-який блог, новина чи вебсторінка
- • PDF за URL або файлом (зокрема скани)
+ • Повний підсумок за транскриптом — YouTube і Vimeo
+ • TikTok, Instagram, X — підсумок з опису/підпису поста
+ • Будь-яка стаття чи вебсторінка та PDF (за URL або файлом)
 
 ✦ **Власний AI**
  • Власний ключ Google Gemini, OpenAI або Anthropic
@@ -140,7 +140,7 @@ A free, bring-your-own-key AI summarizer for videos, articles, and PDFs that als
 
 **Smart AI Summarizer превращает любое видео, статью, веб-страницу или PDF в краткую сводку за секунды — и позволяет задавать вопросы.**
 
-✦ **Не только видео** — популярные видеосайты (YouTube, Vimeo, Twitch и другие), любые статьи и веб-страницы, PDF (URL и файлы).
+✦ **Не только видео** — полный пересказ по транскрипту для YouTube и Vimeo; для TikTok, Instagram и X — сводка из описания/подписи поста; любые статьи, веб-страницы и PDF.
 
 ✦ **Свой AI** — свой ключ Google Gemini, OpenAI или Anthropic; либо без ключа — опциональный browser-session режим использует вашу уже залогиненную вкладку AI-чата. Без аккаунта и подписки.
 

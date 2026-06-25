@@ -68,7 +68,7 @@
   "onbTitle":           { "message": "Welcome to AI Summarizer" },
   "onbWelcomeTitle":    { "message": "AI Summarizer" },
   "onbWelcomeLead":     { "message": "Summarize any video, article, or PDF in seconds." },
-  "onbFeatVideos":      { "message": "YouTube, Vimeo, Twitch, TikTok, Instagram, X" },
+  "onbFeatVideos":      { "message": "YouTube & Vimeo (full transcript) · TikTok, Instagram, X (post text)" },
   "onbFeatArticles":    { "message": "Any article on the web" },
   "onbFeatPdf":         { "message": "PDFs by URL or file" },
   "onbFeatChat":        { "message": "Q&A chat after the summary" },
