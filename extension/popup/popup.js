@@ -1490,6 +1490,9 @@ function detectEmbedContext() {
 // URL or anything we can't summarize (chrome://, new-tab, etc.).
 async function retargetTo(url) {
   if (!url || !/^(https?|file):/i.test(url)) return;
+  // Don't interrupt an in-progress summary or chat answer — keep the panel on the
+  // current page until it finishes. The next tab switch / focus change re-syncs.
+  if (activePort || chatActivePort) return;
   if (url === urlInput.value) return;
   if (detectKindLocal(url).kind === 'unknown') return;
   pendingPdf = null;
