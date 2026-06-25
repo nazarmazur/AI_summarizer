@@ -473,6 +473,11 @@ body.dark .ts-pill:hover { background: #3a3548; color: #c4b5fd; }
   background: #f3f0ff;
   color: var(--text);
   border-bottom-left-radius: 4px;
+  /* A long answer in a tiny block is hard to read — cap it at ~5 lines and let
+     it scroll inside the bubble. Short answers stay short (overflow only kicks
+     in past the cap). */
+  max-height: 120px;
+  overflow-y: auto;
 }
 .bubble.assistant.is-streaming::after {
   content: '▍';

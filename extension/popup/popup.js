@@ -726,12 +726,16 @@ function sendChatQuestion(question) {
     if (msg.type === 'AIS_CHAT_DELTA') {
       acc += (msg.text || '');
       chatStreamingBubble.innerHTML = renderMarkdown(acc, videoIdForLinks());
+      // Bubble is capped at ~5 lines and scrolls internally — keep the newest
+      // tokens in view while streaming.
+      chatStreamingBubble.scrollTop = chatStreamingBubble.scrollHeight;
       chatHistory.scrollTop = chatHistory.scrollHeight;
       return;
     }
     if (msg.type === 'AIS_CHAT_DONE') {
       chatStreamingBubble.innerHTML = renderMarkdown(msg.text || acc, videoIdForLinks());
       chatStreamingBubble.classList.remove('is-streaming');
+      chatStreamingBubble.scrollTop = 0;   // finished answer: show it from the start
       chatStreamingBubble = null;
       chatActivePort = null;
       chatInput.disabled  = false;
