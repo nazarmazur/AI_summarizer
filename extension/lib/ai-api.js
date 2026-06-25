@@ -137,6 +137,15 @@ async function streamGemini({ apiKey, model, prompt, onDelta, attachments }) {
     ],
   };
 
+  // Gemini 2.5 Flash runs an internal "thinking" pass by default — several seconds
+  // of silence before the first token, which made "Detailed" summaries feel very
+  // slow. Summarizing doesn't need it, so disable thinking on Flash models to start
+  // streaming almost immediately. Pro models require a non-zero thinking budget, so
+  // leave those at their default (omit the field).
+  if (!/pro/i.test(model)) {
+    body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  }
+
   async function callModel(modelId) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`;
     return fetch(url, {
