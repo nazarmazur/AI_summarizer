@@ -14,7 +14,7 @@ function escHTML(s) {
 // UI locale follows the chosen summary language when a matching interface locale
 // exists (uk/ru/en); otherwise it falls back to the browser default. AI model
 // names are intentionally left in English everywhere.
-const UI_LOCALES = ['uk', 'ru', 'en'];
+const UI_LOCALES = ['uk', 'ru', 'en', 'es', 'de'];
 function pickUiLocale() {
   if (UI_LOCALES.includes(settings.uiLang)) return settings.uiLang;
   if (UI_LOCALES.includes(settings.language)) return settings.language;
